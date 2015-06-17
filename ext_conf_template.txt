@@ -1,0 +1,14 @@
+  # cat=basic; type=string; label=Path to perl executable: The 'AWStats' Logfile Analyzer uses the perl language interpreter. You must install this application. Enter here the full path to the perl binary including the binary itself (e.g. /usr/bin/perl on Linux or C:\Perl\bin\perl.exe on Windows). Please consult the FAQs of the manual if you use Windows with a path containing whitespaces.
+perlbin = /usr/bin/perl
+
+  # cat=basic; type=boolean; label=Disable AWStats cache clearing: It is not possible to delete the AWStats cache if you set this option. The 'Clear cache' button will disappear.
+disableClearCache = 0
+
+  # cat=basic; type=boolean; label=Enable Plugin DecodeUTFKeys: Allow AWStats to show correctly (in language charset) keywords/keyphrases strings even if they were UTF8 coded by the referer search engine. (Perl modules required: Encode and URI::Escape)
+enableDecodeUTFKeys = 0
+
+  # cat=basic; type=boolean; label=Enable Plugin GeoIP: Country chart is built from an Internet IP-Country database. This plugin reduces AWStats speed of 8%. (Perl modules required: Geo::IP or Geo::IP::PurePerl)
+enableGeoIP = 0
+
+  # cat=basic; type=string; label=Path to GeoIP.dat: Path to the GeoIP.dat file. Enter the full path to the DAT file including the file itself (e.g. /usr/share/GeoIP/GeoIP.dat on Linux or C:\usr\share\GeoIP\GeoIP.dat on Windows). This value will only take effect if you enable the GeoIP plugin.
+pathToGeoIPDat = /usr/share/GeoIP/GeoIP.dat

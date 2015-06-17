@@ -1,0 +1,116 @@
+2014-01-06 Valentin Schmid <valentin.schmid@newmedia.ch>
+	* Upgrade to AWStats 7.3 (build 20140126)
+	* Scheduler task doesn't stop anymore if an error occurs while processing a logile.
+
+2014-01-06 Valentin Schmid <valentin.schmid@newmedia.ch>
+	* Upgrade to AWStats 7.3 (build beta)
+	* Fixed typo3 dependency (<= version 4.7.99)
+
+2013-08-27 Valentin Schmid <valentin.schmid@newmedia.ch>
+	* Upgrade to AWStats 7.2 (build 1.992)
+	* removed awstats-update.phpcron (use scheduler task instead)
+	* Depends now on PHP 5.2+
+	* Manual update
+	* Maintainer change (Special thanks goes to Reto and Davide for keeping this extension up to date)
+
+2011-12-05 Davide Caldelari <davide.caldelari@newmedia.ch>
+	* FIXED: #31465 IE8 Form Problem behoben (Frank Hess).
+
+2011-11-14 Davide Caldelari <davide.caldelari@newmedia.ch>
+	* Removed deprecated middle() function calls (Thanks to Daniel Minder)
+	
+2011-08-24 Reto Zahner <reto.zahner@newmedia.ch>
+	* Fixed missing $ in static calls (Thanks to Frank Hess)
+
+2011-05-02 Reto Zahner <reto.zahner@newmedia.ch>
+	* Fixed wrong "unlink lockfile" url (Thanks to Alexander Bigga)
+	* Fixed missing "unlink lockfile" after processing update (Thanks to Alexander Bigga)
+
+2011-04-18 Reto Zahner <reto.zahner@newmedia.ch>
+	* Upgrade to AWStats 7.0 (build 1.971)
+	* Depends now on TYPO3 4.5+
+	* Fixed wrong paths in TYPO3 4.5 (Thanks to Martin Fluer and Michael Schreiner)
+
+2009-02-13 Andri Steiner  <asteiner@snowflake.ch>
+	* Add possibility to install as global/system extensions
+
+2010-04-01 Reto Zahner <reto.zahner@newmedia.ch>
+	* Maintainer changed. (Big thanks to Valentin Schmid for his great work.)
+	* Added scheduler task to update the log statistics.
+
+2009-02-11 Valentin Schmid  <valli@icsurselva.ch>
+	* AWStats needs now at least perl version 5.7.3
+	* AWStats needs now the Encode perl module installed
+	* Added checks if the required perl modules are present
+	* Sort logfiles alphabetically
+
+2009-01-15 Valentin Schmid  <valli@icsurselva.ch>
+	* Upgrade to AWStats 6.9 stable (build 1.925)
+	* Fixed awstats bug 2314286 (Special thanks to Andreas Mohr)
+	* Manual update (using doc_template 1.2.5)
+
+2008-08-27 Valentin Schmid  <valli@icsurselva.ch>
+	* Upgrade to AWStats 6.9 beta (build 1.914)
+	  (AWStats 6.8 and lower is susceptible to XSS attacks;
+	  see also: http://awstats.sourceforge.net/awstats_security_news.php)
+
+2008-07-07 Valentin Schmid  <valli@icsurselva.ch>
+	* added the possibility to enable the AWStats plugin DecodeUTFKeys
+	* added the possibility to enable the AWStats plugin GeoIP
+	* Manual update
+
+2008-01-10 Valentin Schmid  <valli@icsurselva.ch>
+	* added the possibility to disable the cache clearing to the extension configuration
+	* ext_conf_template.txt and Manual update regarding perl on Windows
+	  (Special thanks to Joerg Wagner)
+
+2007-11-30 Valentin Schmid  <valli@icsurselva.ch>
+	* awstats-update.phpcron doesn't report php notices anymore
+	  (Special thanks to Thilo Wunderlich)
+	* Fixed regular expressions for the logfile extensions
+
+2007-11-27 Valentin Schmid  <valli@icsurselva.ch>
+	* Added optional 'Action after updating' configuration
+	  (Special thanks to Andri Steiner, snowflake productions)
+	* Clearing the cache is only activated if 'Action after updating' is not set
+	* Manual update
+
+2007-10-30 Valentin Schmid  <valli@icsurselva.ch>
+	* Fixed get_perlbin for the Windows environment (Special thanks to Andreas Englert)
+	* Added basic perl version checks to get_perlbin
+
+2007-08-29 Valentin Schmid  <valli@icsurselva.ch>
+	* Upgrade to AWStats 6.7
+
+2007-07-17 Valentin Schmid  <valli@icsurselva.ch>
+	* Fixed Bug regarding filter parameters
+	  (Special thanks to Jan Wulff)
+	* better HTML
+	* Manual update
+	* Moved to stable
+
+2007-04-24 Valentin Schmid  <valli@icsurselva.ch>
+	* Fixed Bug #5080 (bugs.typo3.org)
+	  It is now possible to run ics_awstats in a DocumentRoot containing spaces
+
+2007-03-08 Valentin Schmid  <valli@icsurselva.ch>
+	* Upgrade to AWStats 6.6
+	* Fixed generation of awstatsFullUrl in class.tx_icsawstats_awstats.php
+	  ics_awstats should now also work if TYPO3 is installed in a subdirectory of the document root
+	* Manual update
+
+2006-10-25 Valentin Schmid  <valli@icsurselva.ch>
+	* Fixed the generation of PATH_typo3 in awstats-update.phpcron
+	* Manual update
+
+2006-09-29 Valentin Schmid  <valli@icsurselva.ch>
+	* Fixed pass-by-reference bug in index.php
+	* Fixed typo3 dependency (>= version 3.8)
+	* Added optional reverse DNS lookup configuration
+	* Manual update
+
+2006-09-20 Valentin Schmid  <valli@icsurselva.ch>
+	* Fixed upload from 0.1.0; extension isn't shy anymore
+
+2006-09-19 Valentin Schmid  <valli@icsurselva.ch>
+	* Initial release

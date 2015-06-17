@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>module</type>
+		<description>Language labels for module &quot;tools_txicsawstatsM1&quot;</description>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="title">AWStats logfile analysis</label>
+			<label index="helpText">The logfiles have to be named *.log or *log*.txt&lt;br /&gt;examples: &lt;strong&gt;my-domain.log logfile.txt website-log.txt&lt;/strong&gt;</label>
+			<label index="errLogfileDir">&lt;strong&gt;ERROR:&lt;/strong&gt;&lt;br /&gt;The logfile directory &quot;%s&quot; configured in typo3conf/localconf.php was NOT found!</label>
+			<label index="errCreateAwsDataDir">&lt;strong&gt;ERROR:&lt;/strong&gt;&lt;br /&gt;Could not create directory &quot;%s&quot; to store data for AWStats. Please check write permissions.</label>
+			<label index="errNoLogfileConfig">The requested logfile is not configured!</label>
+			<label index="errAwsCallFailed">There was something wrong with the call of the AWStats script! Use the debug mode to find the reason.</label>
+			<label index="errUpdateLocked">Update is still in progress by another call. If you are sure that this is not the case delete the update lock file</label>
+			<label index="errUnknown">An unknown error has occured.</label>
+			<label index="noLogfilesFound">&lt;strong&gt;ERROR:&lt;/strong&gt;&lt;br /&gt;No logfiles found in directory &quot;%s&quot;&lt;br /&gt;The logfiles have to be named *.log or *log*.txt&lt;br /&gt;examples: &lt;strong&gt;my-domain.log logfile.txt website-log.txt&lt;/strong&gt;</label>
+			<label index="btnSaveConf">save configuration</label>
+			<label index="btnEditConf">edit configuration</label>
+			<label index="hdrSelectLogfile">Select logfile to view analysis:</label>
+			<label index="hdrConfLogfile">Configure logfiles:</label>
+			<label index="msg1ConfLogfile">You have to configure following logfiles:</label>
+			<label index="msg2ConfLogfile">Please enter the domain(s) for which the logfile is. For multiple domains seperate them with komma. The main domain first.&lt;br /&gt;example: &lt;strong&gt;www.mydomain.com,mydomain.com,sub.mydomain.com&lt;/strong&gt;&lt;br /&gt;You can hide files with &lt;strong&gt;-&lt;/strong&gt; (minus)</label>
+			<label index="hdrEditLogfile">Edit logfile configuration:</label>
+			<label index="btnClearCache">Clear cache</label>
+			<label index="hdrClearCache">Clear AWStats cache</label>
+			<label index="descrClearCache">Clearing the cache may be needed with upgrade to new AWStats versions.</label>
+			<label index="descrClearCacheDisabled">Clearing the cache is disabled for all logfiles which have an 'Action after updating' set in the configuration.</label>
+			<label index="cacheCleared">Cleared caches.</label>
+			<label index="labelLogfile">Logfile</label>
+			<label index="labelDomains">Domain(s)</label>
+			<label index="labelBrowserUpdate">Browser update</label>
+			<label index="labelCronUpdate">Cron update</label>
+			<label index="labelReverseDNSLookup">Reverse DNS Lookups</label>
+			<label index="labelAfterAnalyzingAction">Action after updating</label>
+			<label index="labelNone">None</label>
+			<label index="labelPurgeLogFile">Purge logfile</label>
+			<label index="labelArchiveLogrecords">Archive logrecords</label>
+			<label index="updateInProgress">Update in progress</label>
+			<label index="deleteUpdateLockfile">Delete update lockfile</label>
+		</languageKey>
+		<languageKey index="de" type="array">
+			<label index="title">AWStats Logfile Analyse</label>
+			<label index="helpText">Die Logfiles müssen auf folgendes Muster passen: *.log oder *log*.txt&lt;br /&gt;Beispiele: &lt;strong&gt;my-domain.log logfile.txt website-log.txt&lt;/strong&gt;</label>
+			<label index="errLogfileDir">&lt;strong&gt;FEHLER:&lt;/strong&gt;&lt;br /&gt;Das Logfile Verzeichnis &quot;%s&quot; konfiguriert in typo3conf/localconf.php wurde NICHT gefunden!</label>
+			<label index="errCreateAwsDataDir">&lt;strong&gt;FEHLER:&lt;/strong&gt;&lt;br /&gt;Kann das Verzeichnis &quot;%s&quot; nicht erstellen um AWStats-Daten zu speichern. Bitte überprüfen Sie die Schreib-Berechtigung.</label>
+			<label index="errNoLogfileConfig">Die angeforderte Logdatei ist noch nicht konfiguriert!</label>
+			<label index="errAwsCallFailed">Der AWStats System-Aufruf ist fehlgeschlagen! Benutze den Debug-Mode um den Grund zu finden.</label>
+			<label index="errUpdateLocked">Die Aktualisierung ist immer noch im Gange aufgrund eines anderen Aufrufs. Falls Sie sicher sind, dass dies nicht der Fall ist, löschen Sie die Aktualisierungs-Sperrdatei.</label>
+			<label index="errUnknown">Ein unbekannter Fehler ist aufgetreten.</label>
+			<label index="noLogfilesFound">&lt;strong&gt;FEHLER:&lt;/strong&gt;&lt;br /&gt;Keine Logfiles im Verzeichnis &quot;%s&quot; gefunden.&lt;br /&gt;Die Logfiles müssen auf folgendes Muster passen: *.log oder *log*.txt&lt;br /&gt;Beispiele: &lt;strong&gt;my-domain.log logfile.txt website-log.txt&lt;/strong&gt;</label>
+			<label index="btnSaveConf">Konfiguration sichern</label>
+			<label index="btnEditConf">Konfiguration bearbeiten</label>
+			<label index="hdrSelectLogfile">Wählen Sie ein Logfile für die Analyse aus:</label>
+			<label index="hdrConfLogfile">Logfiles konfigurieren:</label>
+			<label index="msg1ConfLogfile">Sie müssen folgende Logfiles konfigurieren:</label>
+			<label index="msg2ConfLogfile">Bitte die Domäne(n) für das Logfile eintragen. Mehrere Domänen mit Komma trennen. Die Haupt-Domäne als erstes.&lt;br /&gt;Beispiel: &lt;strong&gt;www.mydomain.com,mydomain.com,sub.mydomain.com&lt;/strong&gt;&lt;br /&gt;Ist eine Datei kein Logfile, dann &lt;strong&gt;-&lt;/strong&gt; (minus) eintragen.&lt;br /&gt;</label>
+			<label index="hdrEditLogfile">Logfile Konfiguration bearbeiten:</label>
+			<label index="btnClearCache">Cache löschen</label>
+			<label index="hdrClearCache">AWStats Cache löschen</label>
+			<label index="descrClearCache">Das Löschen des Cache ist unter Umständen beim Upgrade auf eine neue AWStats Version notwendig.</label>
+			<label index="descrClearCacheDisabled">Das Löschen des Cache ist deaktiviert für alle Logfiles, welche eine 'Aktion nach der Aktualisierung' in der Konfiguration gesetzt haben.</label>
+			<label index="cacheCleared">Caches gelöscht.</label>
+			<label index="labelLogfile">Logfile</label>
+			<label index="labelDomains">Domäne(n)</label>
+			<label index="labelBrowserUpdate">Browser Aktualisierung</label>
+			<label index="labelCronUpdate">Cron Aktualisierung</label>
+			<label index="labelReverseDNSLookup">Reverse DNS Lookups</label>
+			<label index="labelAfterAnalyzingAction">Aktion nach der Aktualisierung</label>
+			<label index="labelNone">Keine</label>
+			<label index="labelPurgeLogFile">Logfile leeren</label>
+			<label index="labelArchiveLogrecords">Logdaten archivieren</label>
+			<label index="updateInProgress">Aktualisierung im Gange</label>
+			<label index="deleteUpdateLockfile">Lösche Aktualisierungs-Sperrdatei</label>
+		</languageKey>
+	</data>
+</T3locallang>

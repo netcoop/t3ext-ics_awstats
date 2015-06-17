@@ -1,0 +1,67 @@
+.aws_title,
+.aws_blank {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+    background-color: #5B5B5B;
+    background-image: -moz-linear-gradient(center top , #7F7F7F 10%, #5B5B5B 100%);
+    background-repeat: repeat-x;
+    color: #FFFFFF;
+    height: 20px;
+    line-height: 19px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    position: relative;
+    padding: 1px 4px;
+}
+
+.aws a,
+.awsm a {
+    text-decoration: underline;
+}
+
+.aws_title a {
+    font-size: 11px;
+    font-weight: normal;
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.awsm {
+	padding-top: 0.75em;
+}
+
+table.aws_border,
+table.aws_data {
+	border-collapse: collapse;
+}
+
+table.aws_border,
+table.aws_data {
+	border: none;
+}
+
+table.aws_data th,
+table.aws_data td {
+	border: 1px solid #DADADA;
+}
+
+/* Information-tables in cells */
+table.aws_data td table {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+
+table.aws_data[border="0"] th,
+table.aws_data[border="0"] td {
+	border: none;
+}
+
+hr {
+	background: none;
+	border-bottom: none;
+	border-top-color: #DDD; 	
+}
+
+.ctooltip { position:absolute; top:0px; left:0px; z-index:2; width:380; visibility:hidden; font: 8pt MS Comic Sans,arial,sans-serif; background-color: #FFFFE6; padding: 8px; border: 1px solid black; }

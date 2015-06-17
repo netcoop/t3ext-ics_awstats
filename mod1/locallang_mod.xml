@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>module</type>
+		<description>Language labels for module &quot;tools_txicsawstatsM1&quot; - header, description</description>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="mlang_tabs_tab">AWStats</label>
+			<label index="mlang_labels_tabdescr">Integrated 'Third-party module', one of the best free logfile analyzers.</label>
+			<label index="mlang_labels_tablabel">AWStats logfile analyzer</label>
+		</languageKey>
+		<languageKey index="de" type="array">
+			<label index="mlang_tabs_tab">AWStats</label>
+			<label index="mlang_labels_tabdescr">Dieses Modul integriert den Logfile Analyzer 'AWStats' in Typo3.</label>
+			<label index="mlang_labels_tablabel">AWStats Logfile Analyse</label>
+		</languageKey>
+	</data>
+</T3locallang>
