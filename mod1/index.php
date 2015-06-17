@@ -99,7 +99,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('t3log'))	{
 			$dbg = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('dbg');
 			$t3log = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('t3log');
-			$aws_wrapper = $SERVER['PHP_SELF'].'?M=tools_txicsawstatsM1&t3log='.$t3log;
+			$aws_wrapper = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_txicsawstatsM1', array('t3log' => $t3log));
 			$aws_wrapper.= ($dbg) ? '&dbg=1' : '';
 			$result = $awstats->call_awstats($t3log, $aws_wrapper, $dbg);
 			if (!is_numeric($result)) {
