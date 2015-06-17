@@ -1,10 +1,10 @@
 <?php
 
-class tx_icsawstats_updatetask extends tx_scheduler_Task {
+class tx_icsawstats_updatetask extends \TYPO3\CMS\Scheduler\Task\AbstractTask {
 
 	public function execute() {
 
-		$awstats = t3lib_div::makeInstance('tx_icsawstats_awstats');
+		$awstats = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_icsawstats_awstats');
 
 		// do the job
 		$retval = true;

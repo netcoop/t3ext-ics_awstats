@@ -3,7 +3,7 @@
 /***************************************************************
  * Extension Manager/Repository config file for ext "ics_awstats".
  *
- * Auto generated 17-06-2015 17:26
+ * Auto generated 17-06-2015 17:35
  *
  * Manual updates:
  * Only the data in the array - everything else is removed by next

@@ -30,8 +30,8 @@
  * @author	Valentin Schmid <valli@icsurselva.ch>
  */
 
-require_once(PATH_t3lib.'class.t3lib_extmgm.php');
-require_once(PATH_t3lib.'class.t3lib_div.php');
+
+
 
 class tx_icsawstats_awstats {
 
@@ -54,11 +54,11 @@ class tx_icsawstats_awstats {
 		global $TYPO3_CONF_VARS;
 
 		$this->ext_conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['ics_awstats']);
-		$this->conf['awstatsFullDir'] = t3lib_extMgm::extPath('ics_awstats').'awstats/';
+		$this->conf['awstatsFullDir'] = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('ics_awstats').'awstats/';
 			// we need the absolute URL path to awstats (without host)
 			// relative URL wouldn't work with ics_web_awstats or ics_beuser_awstats
-		$siteUrl = t3lib_div::getIndpEnv('TYPO3_SITE_URL');
-		$reqHost = t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST');
+		$siteUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
+		$reqHost = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST');
 		$siteUrlPath = substr($siteUrl, strlen($reqHost));
 		$this->conf['awstatsFullUrl'] = $siteUrlPath.t3lib_extMgm::siteRelPath('ics_awstats').'awstats/';
 		$this->conf['awstatsScript']  = 'awstats.pl';
@@ -77,7 +77,7 @@ class tx_icsawstats_awstats {
 		$perlbin = $this->ext_conf['perlbin'];
 		if (! $perlbin) $perlbin = '/usr/bin/perl';
 		// test if perl is running and do some basic version checks
-		$pbcmd = $perlbin.' '.escapeshellarg(t3lib_extMgm::extPath('ics_awstats').'mod1/get_pv.pl');
+		$pbcmd = $perlbin.' '.escapeshellarg(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('ics_awstats').'mod1/get_pv.pl');
 		exec($pbcmd, $testoutput, $retval);
 		if ($retval || (! preg_match('/^<pv>([\d\.]+)<\/pv><enc>([01])<\/enc><esc>([01])<\/esc><geo>([01])<\/geo><geopp>([01])<\/geopp>$/', $testoutput[0], $matches)) ) {
 			echo("Perl was not running as expected. Please check the following points:<br />\n");
@@ -205,7 +205,7 @@ class tx_icsawstats_awstats {
 	}
 
 	function set_logconfigs($logconfigs) {
-		t3lib_div::fixPermissions($awstats->conf['awstats_conf']);
+		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
 		$fh = fopen($this->conf['awstats_conf'], 'w');
 		foreach ( $logconfigs as $lfile => $logconfig ) {
 			if ($logconfig['type'] != self::$LOGF_UNREGISTERED) {
@@ -222,7 +222,7 @@ class tx_icsawstats_awstats {
 			}
 		}
 		fclose($fh);
-		t3lib_div::fixPermissions($awstats->conf['awstats_conf']);
+		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
 	}
 
 	function clear_cache($t3log) {
@@ -231,7 +231,7 @@ class tx_icsawstats_awstats {
 			return false;
 		}
 		$aws_cache_dir = $this->conf['awstats_data_dir'].$t3log.'/';
-		$cache_files = t3lib_div::getFilesInDir($aws_cache_dir, 'txt', 1);
+		$cache_files = \TYPO3\CMS\Core\Utility\GeneralUtility::getFilesInDir($aws_cache_dir, 'txt', 1);
 		foreach ( $cache_files as $key => $file ) {
 				// do not delete the DNSStaticCacheFile
 			if (basename($file) == 'dnscache.txt') continue;
@@ -265,7 +265,7 @@ class tx_icsawstats_awstats {
 
 			// check for the existance of the awstats cache dir
 		if (!@is_dir($aws_cache_dir)) {
-			t3lib_div::mkdir($aws_cache_dir);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($aws_cache_dir);
 		}
 
 		putenv ('AWS_DOMAIN='. $aws_domain);
@@ -283,8 +283,8 @@ class tx_icsawstats_awstats {
 		putenv ('AWS_BGCOLOR='. $TBE_TEMPLATE->bgColor);
 		putenv ('AWS_TBT_BGCOLOR='. $TBE_TEMPLATE->bgColor5);
 		putenv ('AWS_TB_BGCOLOR='. $TBE_TEMPLATE->bgColor4);
-		putenv ('AWS_TB_COLOR='. t3lib_div::modifyHTMLColor($TBE_TEMPLATE->bgColor4,-10,-10,-10));
-		putenv ('AWS_TBR_BGCOLOR='. t3lib_div::modifyHTMLColor($TBE_TEMPLATE->bgColor4,+15,+15,+15));
+		putenv ('AWS_TB_COLOR='. \TYPO3\CMS\Core\Utility\GeneralUtility::modifyHTMLColor($TBE_TEMPLATE->bgColor4,-10,-10,-10));
+		putenv ('AWS_TBR_BGCOLOR='. \TYPO3\CMS\Core\Utility\GeneralUtility::modifyHTMLColor($TBE_TEMPLATE->bgColor4,+15,+15,+15));
 		putenv ('AWS_INCL_DECODEUTFKEYS='. $this->conf['awstatsFullDir'].'dummy.inc.conf');
 		putenv ('AWS_INCL_GEOIP='. $this->conf['awstatsFullDir'].'dummy.inc.conf');
 		putenv ('AWS_PATH_TO_GEOIP='.$this->ext_conf['pathToGeoIPDat']);
@@ -297,20 +297,20 @@ class tx_icsawstats_awstats {
 		
 			// building the command line parameters for awstats.pl
 		$parameter = ' -config='.escapeshellarg($aws_domain);
-		$parameter.= (t3lib_div::_GP('output')) ? ' -output='.escapeshellarg(t3lib_div::_GP('output')) : ' -output';
-		$parameter.= (t3lib_div::_GP('year')) ? ' -year='.escapeshellarg(t3lib_div::_GP('year')) : '';
-		$parameter.= (t3lib_div::_GP('month')) ? ' -month='.escapeshellarg(t3lib_div::_GP('month')) : '';
-		$parameter.= (t3lib_div::_GP('lang')) ? ' -lang='.escapeshellarg(t3lib_div::_GP('lang')) : '';
-		$parameter.= (t3lib_div::_GP('hostfilter')) ? ' -hostfilter='.escapeshellarg(t3lib_div::_GP('hostfilter')) : '';
-		$parameter.= (t3lib_div::_GP('hostfilterex')) ? ' -hostfilterex='.escapeshellarg(t3lib_div::_GP('hostfilterex')) : '';
-		$parameter.= (t3lib_div::_GP('urlfilter')) ? ' -urlfilter='.escapeshellarg(t3lib_div::_GP('urlfilter')) : '';
-		$parameter.= (t3lib_div::_GP('urlfilterex')) ? ' -urlfilterex='.escapeshellarg(t3lib_div::_GP('urlfilterex')) : '';
-		$parameter.= (t3lib_div::_GP('refererpagesfilter')) ? ' -refererpagesfilter='.escapeshellarg(t3lib_div::_GP('refererpagesfilter')) : '';
-		$parameter.= (t3lib_div::_GP('refererpagesfilterex')) ? ' -refererpagesfilterex='.escapeshellarg(t3lib_div::_GP('refererpagesfilterex')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('output')) ? ' -output='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('output')) : ' -output';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('year')) ? ' -year='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('year')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('month')) ? ' -month='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('month')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('lang')) ? ' -lang='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('lang')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilter')) ? ' -hostfilter='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilter')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilterex')) ? ' -hostfilterex='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilterex')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilter')) ? ' -urlfilter='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilter')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilterex')) ? ' -urlfilterex='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilterex')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilter')) ? ' -refererpagesfilter='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilter')) : '';
+		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilterex')) ? ' -refererpagesfilterex='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilterex')) : '';
 		$parameter.= ($dbg) ? ' -debug=1' : '';
 		$update_in_progress = 0;
-		if ($logconfig['browser_update'] && t3lib_div::_GP('update')) {
-			$parameter.= ' -update='.escapeshellarg(t3lib_div::_GP('update'));
+		if ($logconfig['browser_update'] && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('update')) {
+			$parameter.= ' -update='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('update'));
 			if ($this->is_set_update_lockfile($t3log)) {
 				return self::$ERR_UPDATE_IS_LOCKED;
 			}
@@ -340,8 +340,8 @@ class tx_icsawstats_awstats {
 			}
 		} else {
 			echo('<h1>DEBUG OUTPUT</h1>');
-			t3lib_utility_Debug::debug($this->conf);
-			t3lib_utility_Debug::debug($logconfig);
+			\TYPO3\CMS\Core\Utility\DebugUtility::debug($this->conf);
+			\TYPO3\CMS\Core\Utility\DebugUtility::debug($logconfig);
 			$env = array();
 			$env['TYPO3_MAGIC'] = getenv('TYPO3_MAGIC');
 			$env['AWS_LANG'] = getenv('AWS_LANG');
@@ -366,8 +366,8 @@ class tx_icsawstats_awstats {
 			$env['AWS_INCL_GEOIP'] = getenv('AWS_INCL_GEOIP');
 			$env['AWS_PATH_TO_GEOIP'] = getenv('AWS_PATH_TO_GEOIP');
 
-			t3lib_utility_Debug::debug($env);
-			t3lib_utility_Debug::debug(array('syscmd' => $syscmd));
+			\TYPO3\CMS\Core\Utility\DebugUtility::debug($env);
+			\TYPO3\CMS\Core\Utility\DebugUtility::debug(array('syscmd' => $syscmd));
 			passthru($syscmd);
 			phpinfo();
 		}
@@ -393,7 +393,7 @@ class tx_icsawstats_awstats {
 
 			// check for the existance of the awstats cache dir
 		if (!@is_dir($aws_cache_dir)) {
-			t3lib_div::mkdir($aws_cache_dir);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($aws_cache_dir);
 		}
 
 		putenv ('AWS_DOMAIN='. $aws_domain);
