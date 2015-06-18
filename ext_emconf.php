@@ -14,19 +14,19 @@ $EM_CONF[$_EXTKEY] = array (
 	'title' => 'ICS AWStats',
 	'description' => 'Includes the AWStats logfile analyzer as a backend module. This is a modified version of cc_awstats to support cron, reverse DNS lookups, ics_web_awstats and ics_beuser_awstats.',
 	'category' => 'module',
-	'version' => '0.6.3-dev',
+	'version' => '0.7.0',
 	'state' => 'stable',
 	'uploadfolder' => 0,
 	'createDirs' => '',
 	'clearcacheonload' => 0,
-	'author' => 'Valentin Schmid',
-	'author_email' => 'valentin.schmid@newmedia.ch',
-	'author_company' => 'Suedostschweiz Newmedia AG',
+	'author' => 'Loek Hilgersom',
+	'author_email' => 'typo3extensions@netcoop.nl',
+	'author_company' => 'Netcoop.nl',
 	'constraints' => 
 	array (
 		'depends' => 
 		array (
-			'typo3' => '6.2.0-6.2.99',
+			'typo3' => '6.2.0-7.9.99',
 			'lang' => '',
 			'retrostats' => '',
 		),

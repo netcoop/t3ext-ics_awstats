@@ -29,8 +29,11 @@
  * @author	Valentin Schmid <valli@icsurselva.ch>
  */
 
-$LANG->includeLLFile('EXT:ics_awstats/mod1/locallang.xml');
-$BE_USER->modAccess($MCONF,1);	// This checks permissions and exits if the users has no permission for entry.
+unset($MCONF);
+require('conf.php');
+
+$GLOBALS['LANG']->includeLLFile('EXT:ics_awstats/mod1/locallang.xml');
+$GLOBALS['BE_USER']->modAccess($MCONF, 1);	// This checks permissions and exits if the users has no permission for entry.
 
 class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
@@ -40,7 +43,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		parent::init();
 		
 		// Initialize document
-		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('template');
+		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Backend\Template\DocumentTemplate');
 		$this->doc->setModuleTemplate(
 			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('ics_awstats') . 'mod1/mod_template.html'
 		);
@@ -394,10 +397,6 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/ics_aws
 // Make instance:
 $SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_icsawstats_module1');
 $SOBE->init();
-
-// Include files?
-foreach($SOBE->include_once as $INC_FILE)	include_once($INC_FILE);
-
 $SOBE->main();
 $SOBE->printContent();
 
