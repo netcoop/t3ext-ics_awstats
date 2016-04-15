@@ -1,69 +1,70 @@
 <?php
+
+use \TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use \TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2006 ICSurselva AG (info@icsurselva.ch)
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*  A copy is found in the textfile GPL.txt and important notices to the license
-*  from the author is found in LICENSE.txt distributed with these scripts.
-*
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2006 ICSurselva AG (info@icsurselva.ch)
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  A copy is found in the textfile GPL.txt and important notices to the license
+ *  from the author is found in LICENSE.txt distributed with these scripts.
+ *
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 /**
  * This class is a awstats wrapper for TYPO3
  *
  * @author	Valentin Schmid <valli@icsurselva.ch>
  */
 
-
-
-
 class tx_icsawstats_awstats {
 
-		// Configuration set internally (see constructor method for required keys and their meaning)
+	// Configuration set internally (see constructor method for required keys and their meaning)
 	var $conf = array();
 	var $ext_conf = array();
 
-		// error constants
+	// error constants
 	public static $ERR_LOGFILE_NOT_CONFIGURED = 1;
 	public static $ERR_AWSTATS_CALL_FAILED = 2;
 	public static $ERR_UPDATE_IS_LOCKED = 3;
-		// logfile type constants
+	// logfile type constants
 	public static $LOGF_EXCLUDE = 1;
 	public static $LOGF_REGISTERED = 2;
 	public static $LOGF_UNREGISTERED = 3;
 	public static $LOGF_CHECKED = 4;
 
-		// constructor
+	// constructor
 	function tx_icsawstats_awstats() {
 		global $TYPO3_CONF_VARS;
 
 		$this->ext_conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['ics_awstats']);
-		$this->conf['awstatsFullDir'] = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('ics_awstats').'awstats/';
-			// we need the absolute URL path to awstats (without host)
-			// relative URL wouldn't work with ics_web_awstats or ics_beuser_awstats
-		$siteUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
-		$reqHost = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST');
+		$this->conf['awstatsFullDir'] = ExtensionManagementUtility::extPath('ics_awstats').'awstats/';
+		// we need the absolute URL path to awstats (without host)
+		// relative URL wouldn't work with ics_web_awstats or ics_beuser_awstats
+		$siteUrl = GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
+		$reqHost = GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST');
 		$siteUrlPath = substr($siteUrl, strlen($reqHost));
-		$this->conf['awstatsFullUrl'] = $siteUrlPath . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('ics_awstats').'awstats/';
+		$this->conf['awstatsFullUrl'] = $siteUrlPath . ExtensionManagementUtility::siteRelPath('ics_awstats').'awstats/';
 		$this->conf['awstatsScript']  = 'awstats.pl';
 
-			// check if logfile path is relative or not
+		// check if logfile path is relative or not
 		if (substr($TYPO3_CONF_VARS['FE']['logfile_dir'],0,1) == '/') {
 			$this->conf['logfile_dir'] = $TYPO3_CONF_VARS['FE']['logfile_dir'];
 		} else {
@@ -77,7 +78,7 @@ class tx_icsawstats_awstats {
 		$perlbin = $this->ext_conf['perlbin'];
 		if (! $perlbin) $perlbin = '/usr/bin/perl';
 		// test if perl is running and do some basic version checks
-		$pbcmd = $perlbin.' '.escapeshellarg(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('ics_awstats').'mod1/get_pv.pl');
+		$pbcmd = $perlbin.' '.escapeshellarg(ExtensionManagementUtility::extPath('ics_awstats').'mod1/get_pv.pl');
 		exec($pbcmd, $testoutput, $retval);
 		if ($retval || (! preg_match('/^<pv>([\d\.]+)<\/pv><enc>([01])<\/enc><esc>([01])<\/esc><geo>([01])<\/geo><geopp>([01])<\/geopp>$/', $testoutput[0], $matches)) ) {
 			echo("Perl was not running as expected. Please check the following points:<br />\n");
@@ -119,7 +120,7 @@ class tx_icsawstats_awstats {
 	}
 
 
-		// the update lockfile methods
+	// the update lockfile methods
 	function get_update_lockfile_name($t3log) {
 		return $this->conf['awstats_data_dir'].$t3log.'.upd.lock';
 	}
@@ -140,9 +141,9 @@ class tx_icsawstats_awstats {
 		$updlfile = $this->get_update_lockfile_name($t3log);
 		return @is_file($updlfile);
 	}
-	
 
-		// the logconfig methods
+
+	// the logconfig methods
 	function get_logf_type($domain) {
 		if ($domain == '-') {
 			return self::$LOGF_EXCLUDE;
@@ -151,10 +152,10 @@ class tx_icsawstats_awstats {
 		}
 		return self::$LOGF_REGISTERED;
 	}
-	
+
 	function get_single_logconfig($t3log) {
-			// we could do this more efficient
-			// (that's the only reason for this function)
+		// we could do this more efficient
+		// (that's the only reason for this function)
 		$logconfigs = $this->get_logconfigs();
 		if ($logconfigs[$t3log]) {
 			return $logconfigs[$t3log];
@@ -188,14 +189,14 @@ class tx_icsawstats_awstats {
 				switch ($after_analyzing_action) {
 					case 'p':	// purge logfile
 						$logconfigs[$lfile]['after_analyzing_action'] = 'p';
-					break;
+						break;
 					case 'a':	// archive logrecords
 						$logconfigs[$lfile]['after_analyzing_action'] = 'a';
-					break;
+						break;
 					case 'n':	// do nothing
 					default:
 						$logconfigs[$lfile]['after_analyzing_action'] = 'n';
-					break;
+						break;
 				}
 			}
 			fclose($fh);
@@ -205,7 +206,7 @@ class tx_icsawstats_awstats {
 	}
 
 	function set_logconfigs($logconfigs) {
-		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
+		GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
 		$fh = fopen($this->conf['awstats_conf'], 'w');
 		foreach ( $logconfigs as $lfile => $logconfig ) {
 			if ($logconfig['type'] != self::$LOGF_UNREGISTERED) {
@@ -222,18 +223,18 @@ class tx_icsawstats_awstats {
 			}
 		}
 		fclose($fh);
-		\TYPO3\CMS\Core\Utility\GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
+		GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
 	}
 
 	function clear_cache($t3log) {
-			// do not clear cache files if disableClearCache is set
+		// do not clear cache files if disableClearCache is set
 		if ($this->ext_conf['disableClearCache']) {
 			return false;
 		}
 		$aws_cache_dir = $this->conf['awstats_data_dir'].$t3log.'/';
-		$cache_files = \TYPO3\CMS\Core\Utility\GeneralUtility::getFilesInDir($aws_cache_dir, 'txt', 1);
+		$cache_files = GeneralUtility::getFilesInDir($aws_cache_dir, 'txt', 1);
 		foreach ( $cache_files as $key => $file ) {
-				// do not delete the DNSStaticCacheFile
+			// do not delete the DNSStaticCacheFile
 			if (basename($file) == 'dnscache.txt') continue;
 			unlink($file);
 		}
@@ -241,7 +242,7 @@ class tx_icsawstats_awstats {
 	}
 
 	/**
-	 * 
+	 *
 	 * Enter description here ...
 	 * @param string $t3log
 	 * @param string $aws_wrapper
@@ -259,13 +260,13 @@ class tx_icsawstats_awstats {
 			return self::$ERR_LOGFILE_NOT_CONFIGURED;
 		}
 
-			// Set some usefull vars
+		// Set some usefull vars
 		$aws_domain = $logconfig['domains'][0];
 		$aws_cache_dir = $this->conf['awstats_data_dir'].$t3log.'/';
 
-			// check for the existance of the awstats cache dir
+		// check for the existance of the awstats cache dir
 		if (!@is_dir($aws_cache_dir)) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($aws_cache_dir);
+			GeneralUtility::mkdir($aws_cache_dir);
 		}
 
 		putenv ('AWS_DOMAIN='. $aws_domain);
@@ -283,8 +284,8 @@ class tx_icsawstats_awstats {
 		putenv ('AWS_BGCOLOR='. $TBE_TEMPLATE->bgColor);
 		putenv ('AWS_TBT_BGCOLOR='. $TBE_TEMPLATE->bgColor5);
 		putenv ('AWS_TB_BGCOLOR='. $TBE_TEMPLATE->bgColor4);
-		putenv ('AWS_TB_COLOR='. \TYPO3\CMS\Core\Utility\GeneralUtility::modifyHTMLColor($TBE_TEMPLATE->bgColor4,-10,-10,-10));
-		putenv ('AWS_TBR_BGCOLOR='. \TYPO3\CMS\Core\Utility\GeneralUtility::modifyHTMLColor($TBE_TEMPLATE->bgColor4,+15,+15,+15));
+		putenv ('AWS_TB_COLOR='. GeneralUtility::modifyHTMLColor($TBE_TEMPLATE->bgColor4,-10,-10,-10));
+		putenv ('AWS_TBR_BGCOLOR='. GeneralUtility::modifyHTMLColor($TBE_TEMPLATE->bgColor4,+15,+15,+15));
 		putenv ('AWS_INCL_DECODEUTFKEYS='. $this->conf['awstatsFullDir'].'dummy.inc.conf');
 		putenv ('AWS_INCL_GEOIP='. $this->conf['awstatsFullDir'].'dummy.inc.conf');
 		putenv ('AWS_PATH_TO_GEOIP='.$this->ext_conf['pathToGeoIPDat']);
@@ -294,23 +295,23 @@ class tx_icsawstats_awstats {
 		if ($this->ext_conf['enableGeoIP']) {
 			putenv ('AWS_INCL_GEOIP='. $this->conf['awstatsFullDir'].'geoip.inc.conf');
 		}
-		
-			// building the command line parameters for awstats.pl
+
+		// building the command line parameters for awstats.pl
 		$parameter = ' -config='.escapeshellarg($aws_domain);
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('output')) ? ' -output='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('output')) : ' -output';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('year')) ? ' -year='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('year')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('month')) ? ' -month='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('month')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('lang')) ? ' -lang='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('lang')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilter')) ? ' -hostfilter='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilter')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilterex')) ? ' -hostfilterex='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hostfilterex')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilter')) ? ' -urlfilter='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilter')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilterex')) ? ' -urlfilterex='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('urlfilterex')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilter')) ? ' -refererpagesfilter='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilter')) : '';
-		$parameter.= (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilterex')) ? ' -refererpagesfilterex='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('refererpagesfilterex')) : '';
+		$parameter.= (GeneralUtility::_GP('output')) ? ' -output='.escapeshellarg(GeneralUtility::_GP('output')) : ' -output';
+		$parameter.= (GeneralUtility::_GP('year')) ? ' -year='.escapeshellarg(GeneralUtility::_GP('year')) : '';
+		$parameter.= (GeneralUtility::_GP('month')) ? ' -month='.escapeshellarg(GeneralUtility::_GP('month')) : '';
+		$parameter.= (GeneralUtility::_GP('lang')) ? ' -lang='.escapeshellarg(GeneralUtility::_GP('lang')) : '';
+		$parameter.= (GeneralUtility::_GP('hostfilter')) ? ' -hostfilter='.escapeshellarg(GeneralUtility::_GP('hostfilter')) : '';
+		$parameter.= (GeneralUtility::_GP('hostfilterex')) ? ' -hostfilterex='.escapeshellarg(GeneralUtility::_GP('hostfilterex')) : '';
+		$parameter.= (GeneralUtility::_GP('urlfilter')) ? ' -urlfilter='.escapeshellarg(GeneralUtility::_GP('urlfilter')) : '';
+		$parameter.= (GeneralUtility::_GP('urlfilterex')) ? ' -urlfilterex='.escapeshellarg(GeneralUtility::_GP('urlfilterex')) : '';
+		$parameter.= (GeneralUtility::_GP('refererpagesfilter')) ? ' -refererpagesfilter='.escapeshellarg(GeneralUtility::_GP('refererpagesfilter')) : '';
+		$parameter.= (GeneralUtility::_GP('refererpagesfilterex')) ? ' -refererpagesfilterex='.escapeshellarg(GeneralUtility::_GP('refererpagesfilterex')) : '';
 		$parameter.= ($dbg) ? ' -debug=1' : '';
 		$update_in_progress = 0;
-		if ($logconfig['browser_update'] && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('update')) {
-			$parameter.= ' -update='.escapeshellarg(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('update'));
+		if ($logconfig['browser_update'] && GeneralUtility::_GP('update')) {
+			$parameter.= ' -update='.escapeshellarg(GeneralUtility::_GP('update'));
 			if ($this->is_set_update_lockfile($t3log)) {
 				return self::$ERR_UPDATE_IS_LOCKED;
 			}
@@ -318,7 +319,7 @@ class tx_icsawstats_awstats {
 			$update_in_progress = 1;
 		}
 
-			// exec script
+		// exec script
 		$perlbin = $this->get_perlbin();
 		$syscmd = $perlbin.' '.escapeshellarg($this->conf['awstatsFullDir'].$this->conf['awstatsScript']).$parameter;
 		if (!$dbg) {
@@ -327,11 +328,11 @@ class tx_icsawstats_awstats {
 			ob_start();
 			passthru($syscmd, $retval);
 			$content = ob_get_clean();
-			
+
 			if ($update_in_progress) {
 				$this->unlink_update_lockfile($t3log);
 			}
-			
+
 			if ($retval) {
 				return self::$ERR_AWSTATS_CALL_FAILED;
 			}
@@ -371,7 +372,7 @@ class tx_icsawstats_awstats {
 			passthru($syscmd);
 			phpinfo();
 		}
-			// we may die at this point
+		// we may die at this point
 		if ($update_in_progress) {
 			$this->unlink_update_lockfile($t3log);
 		}
@@ -379,21 +380,21 @@ class tx_icsawstats_awstats {
 	}
 
 	function call_awstats_cli_update($t3log) {
-			// Set some environment values for awstats.conf:
-			// we do only set the necessary vars for update
+		// Set some environment values for awstats.conf:
+		// we do only set the necessary vars for update
 		putenv ('TYPO3_MAGIC=1');
 		$logconfig = $this->get_single_logconfig($t3log);
 		if (! $logconfig['domains']) {
 			return self::$ERR_LOGFILE_NOT_CONFIGURED;
 		}
 
-			// Set some usefull vars
+		// Set some usefull vars
 		$aws_domain = $logconfig['domains'][0];
 		$aws_cache_dir = $this->conf['awstats_data_dir'].$t3log.'/';
 
-			// check for the existance of the awstats cache dir
+		// check for the existance of the awstats cache dir
 		if (!@is_dir($aws_cache_dir)) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($aws_cache_dir);
+			GeneralUtility::mkdir($aws_cache_dir);
 		}
 
 		putenv ('AWS_DOMAIN='. $aws_domain);
@@ -413,8 +414,8 @@ class tx_icsawstats_awstats {
 		if ($this->ext_conf['enableGeoIP']) {
 			putenv ('AWS_INCL_GEOIP='. $this->conf['awstatsFullDir'].'geoip.inc.conf');
 		}
-		
-			// building the command line parameters for awstats.pl
+
+		// building the command line parameters for awstats.pl
 		$parameter = ' -config='.escapeshellarg($aws_domain);
 		$parameter.= ' -update';
 		if ($this->is_set_update_lockfile($t3log)) {
@@ -422,10 +423,10 @@ class tx_icsawstats_awstats {
 		}
 		$this->set_update_lockfile($t3log);
 
-			// exec script
+		// exec script
 		$perlbin = $this->get_perlbin();
 		$syscmd = $perlbin.' '.escapeshellarg($this->conf['awstatsFullDir'].$this->conf['awstatsScript']).$parameter;
-		
+
 		ob_start();
 		passthru($syscmd, $retval);
 		$content = ob_get_clean();
