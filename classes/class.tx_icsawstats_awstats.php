@@ -206,7 +206,7 @@ class tx_icsawstats_awstats {
 	}
 
 	function set_logconfigs($logconfigs) {
-		GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
+		GeneralUtility::fixPermissions($this->conf['awstats_conf']);
 		$fh = fopen($this->conf['awstats_conf'], 'w');
 		foreach ( $logconfigs as $lfile => $logconfig ) {
 			if ($logconfig['type'] != self::$LOGF_UNREGISTERED) {
@@ -223,7 +223,7 @@ class tx_icsawstats_awstats {
 			}
 		}
 		fclose($fh);
-		GeneralUtility::fixPermissions($awstats->conf['awstats_conf']);
+		GeneralUtility::fixPermissions($this->conf['awstats_conf']);
 	}
 
 	function clear_cache($t3log) {
@@ -435,7 +435,7 @@ class tx_icsawstats_awstats {
 			return tx_icsawstats_awstats::$ERR_AWSTATS_CALL_FAILED;
 		}
 		else {
-			return $output;
+			return $content;
 		}
 	} // End of method: call_awstats_cli_update()
 
