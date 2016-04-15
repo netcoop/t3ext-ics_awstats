@@ -296,15 +296,15 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		global $LANG;
 		$content = '<tr>';
 		$content.= '<td colspan="2"><strong>'.$LANG->getLL('labelLogfile').'</strong></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><strong>'.$LANG->getLL('labelDomains').'</strong></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><strong>'.$LANG->getLL('labelBrowserUpdate').'</strong></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><strong>'.$LANG->getLL('labelCronUpdate').'</strong></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><strong>'.$LANG->getLL('labelReverseDNSLookup').'</strong></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><strong>'.$LANG->getLL('labelAfterAnalyzingAction').'</strong></td>';
 		$content.= '</tr>'."\n";
 		return $content;
@@ -323,15 +323,15 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		$content = '<tr>';
 		$content.= '<td width="18"><img src="../'.$relPath.'/mod1/logfile.gif" width="18" height="16"  title="'.$lfile.'" alt="Logfile: " /></td>';
 		$content.= '<td>'.$lfile.'</td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><input type="text" value="'.$domains_val.'" name="'.$baseformname.'[domains]" /></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><input type="checkbox" '.$browser_update_val.'name="'.$baseformname.'[browser_update]" /></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><input type="checkbox" '.$cron_update_val.'name="'.$baseformname.'[cron_update]" /></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><input type="checkbox" '.$reverse_dnslookup_val.'name="'.$baseformname.'[reverse_dnslookup]" /></td>';
-		$content.= '<td><img src="clear.gif" width="4" height="1" alt="" /></td>';
+		$content.= '<td style="width: 4px"></td>';
 		$content.= '<td><select name="'.$baseformname.'[after_analyzing_action]">';
 		$content.= '<option value="n"'.(($logconfig['after_analyzing_action'] == 'n')?' selected="selected"':'').'>'.$LANG->getLL('labelNone').'</option>';
 		$content.= '<option value="p"'.(($logconfig['after_analyzing_action'] == 'p')?' selected="selected"':'').'>'.$LANG->getLL('labelPurgeLogFile').'</option>';
@@ -362,7 +362,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		$content = '<tr>';
 		$content.= '<td width="18"><img src="../'.$relPath.'mod1/logfile.gif" width="18" height="16" title="'.$lfile.'" alt="Logfile: "/></td>';
 		$content.= '<td><a href="'.htmlspecialchars($url).'">'.$lfile .'</a></td>';
-		$content.= '<td><img src="clear.gif" width="20" height="1" alt="" /></td><td>';
+		$content.= '<td style="width: 20px"></td><td>';
 		if ($awstats_obj->is_set_update_lockfile($lfile)) {
 			$content.= $LANG->getLL('updateInProgress');
 			if ($logconfig['browser_update']) {
