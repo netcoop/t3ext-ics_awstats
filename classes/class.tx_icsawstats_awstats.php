@@ -60,7 +60,7 @@ class tx_icsawstats_awstats {
 		$siteUrl = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
 		$reqHost = \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST');
 		$siteUrlPath = substr($siteUrl, strlen($reqHost));
-		$this->conf['awstatsFullUrl'] = $siteUrlPath.t3lib_extMgm::siteRelPath('ics_awstats').'awstats/';
+		$this->conf['awstatsFullUrl'] = $siteUrlPath . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('ics_awstats').'awstats/';
 		$this->conf['awstatsScript']  = 'awstats.pl';
 
 			// check if logfile path is relative or not
