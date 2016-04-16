@@ -1,4 +1,9 @@
 <?php
+
+use \TYPO3\CMS\Backend\Utility\BackendUtility;
+use \TYPO3\CMS\Core\Utility\GeneralUtility;
+use \TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -43,14 +48,14 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		parent::init();
 		
 		// Initialize document
-		$this->doc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Backend\Template\DocumentTemplate');
+		$this->doc = GeneralUtility::makeInstance('TYPO3\CMS\Backend\Template\DocumentTemplate');
 		$this->doc->setModuleTemplate(
-			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('ics_awstats') . 'mod1/mod_template.html'
+			ExtensionManagementUtility::extPath('ics_awstats') . 'mod1/mod_template.html'
 		);
 		$this->doc->backPath = $GLOBALS['BACK_PATH'];
 		$this->doc->addStyleSheet(
 			'tx_icswebawstats',
-			'../' . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('ics_awstats') . 'mod1/mod_styles.css'
+			'../' . ExtensionManagementUtility::siteRelPath('ics_awstats') . 'mod1/mod_styles.css'
 		);
 	}	
 	
@@ -60,7 +65,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	function main()	{
 		global $BE_USER,$LANG,$BACK_PATH,$TCA_DESCR,$TCA,$HTTP_GET_VARS,$HTTP_POST_VARS,$CLIENT,$TYPO3_CONF_VARS;
 
-		$this->pageinfo = \TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess(0, $this->perms_clause);
+		$this->pageinfo = BackendUtility::readPageAccess(0, $this->perms_clause);
 		
 		$this->doc->form='<form action="" method="post">';
 
@@ -96,13 +101,13 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
 		global $LANG, $TBE_TEMPLATE;
 
-		$awstats = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_icsawstats_awstats');
+		$awstats = GeneralUtility::makeInstance('tx_icsawstats_awstats');
 
 		// if the user has selected one logfile we run awstats
-		if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('t3log'))	{
-			$dbg = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('dbg');
-			$t3log = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('t3log');
-			$aws_wrapper = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_txicsawstatsM1', array('t3log' => $t3log));
+		if (GeneralUtility::_GP('t3log'))	{
+			$dbg = GeneralUtility::_GP('dbg');
+			$t3log = GeneralUtility::_GP('t3log');
+			$aws_wrapper = BackendUtility::getModuleUrl('tools_txicsawstatsM1', array('t3log' => $t3log));
 			$aws_wrapper.= ($dbg) ? '&dbg=1' : '';
 			$result = $awstats->call_awstats($t3log, $aws_wrapper, $dbg);
 			if (!is_numeric($result)) {
@@ -135,7 +140,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
 			// check for the existance of the awstats data dir
 			if (!@is_dir($awstats->conf['awstats_data_dir'])) {
-				if (! \TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($awstats->conf['awstats_data_dir'])) {
+				if (! GeneralUtility::mkdir($awstats->conf['awstats_data_dir'])) {
 					$this->content .= $this->doc->section('',sprintf($LANG->getLL('errCreateAwsDataDir'), $awstats->conf['awstats_data_dir']));
 					return;
 				}
@@ -143,7 +148,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
 
 			$logfiles = array();
-			$data = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('data');
+			$data = GeneralUtility::_GP('data');
 
 			// collect submitted form data
 			if (!empty($data['logfiles'])) {
@@ -177,7 +182,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			}
 
 			// write the merged data if there's some submitted data
-			if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('logf_save_conf')) {
+			if (GeneralUtility::_GP('logf_save_conf')) {
 				$awstats->set_logconfigs($logfiles);
 			}
 
@@ -203,8 +208,8 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			}
 
 			// delete update lock files
-			if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('rmlock'))	{
-				$rmlock = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('rmlock');
+			if (GeneralUtility::_GP('rmlock'))	{
+				$rmlock = GeneralUtility::_GP('rmlock');
 				if ($logfiles[$rmlock]['browser_update']) {
 					$awstats->unlink_update_lockfile($rmlock);
 				}
@@ -217,7 +222,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			reset($logfiles);
 			while (list ($lfile, $logconfig) = each($logfiles)) {
 				if ($logfiles[$lfile]['type'] == tx_icsawstats_awstats::$LOGF_CHECKED) {
-					if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('logf_clear_cache') && ($logfiles[$lfile]['after_analyzing_action'] == 'n')) {
+					if (GeneralUtility::_GP('logf_clear_cache') && ($logfiles[$lfile]['after_analyzing_action'] == 'n')) {
 						$awstats->clear_cache($lfile);
 					}
 					$theCodeChecked.= $this->get_log_link_elements($awstats, $lfile, $logfiles[$lfile]);
@@ -234,7 +239,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 				$theCode = '<table border="0" cellspacing="0" cellpadding="1">';
 				$theCode.= $theCodeChecked;
 				$theCode.= '</table>';
-				if (!\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('logf_edit_conf')) {
+				if (!GeneralUtility::_GP('logf_edit_conf')) {
 					$theCode.= '<br /><input type="submit" name="logf_edit_conf" value="'.$LANG->getLL('btnEditConf').'" /><br />';
 				}
 				$content = $this->doc->section($LANG->getLL('hdrSelectLogfile'),'<br />'.$theCode.'<br />',0,1);
@@ -254,7 +259,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			}
 
 			// edit logfiles conf
-			if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('logf_edit_conf') && $theCodeEdit) {
+			if (GeneralUtility::_GP('logf_edit_conf') && $theCodeEdit) {
 				$theCode='<table border="0" cellspacing="0" cellpadding="1">';
 				$theCode.= $this->get_logconfig_form_header();
 				$theCode.= $theCodeEdit;
@@ -270,7 +275,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 			// button to delete cache files
 			if (($theCodeChecked) && (! $awstats->ext_conf['disableClearCache'])) {
 				$content.= $this->doc->spacer(15);
-				if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('logf_clear_cache')) {
+				if (GeneralUtility::_GP('logf_clear_cache')) {
 					$theCode=''.$LANG->getLL('cacheCleared').'';
 				} else {
 					$theCode='<input type="submit" name="logf_clear_cache" value="'.$LANG->getLL('btnClearCache').'" /><br /><br />';
@@ -283,7 +288,8 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		}
 
 		// Help text:
-		if (!\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('t3log') && $GLOBALS['BE_USER']->uc['helpText']) {
+		if (!GeneralUtility::_GP('t3log') && $GLOBALS['BE_USER']->uc['helpText']) {
+
 			if (version_compare(TYPO3_branch, '7.5', '<')) {
 				$icon = '<img src="'.$GLOBALS['BACK_PATH'].'gfx/helpbubble.gif" width="14" height="14" hspace="2" align="top" alt="" />';
 			} else {
@@ -325,7 +331,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		$cron_update_val = ($logconfig['cron_update']) ? 'checked="checked" ' : '';
 		$reverse_dnslookup_val = ($logconfig['reverse_dnslookup']) ? 'checked="checked" ' : '';
 
-		$relPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('ics_awstats');
+		$relPath = ExtensionManagementUtility::siteRelPath('ics_awstats');
 		
 		$content = '<tr>';
 		$content.= '<td width="18"><img src="../'.$relPath.'/mod1/logfile.gif" width="18" height="16"  title="'.$lfile.'" alt="Logfile: " /></td>';
@@ -359,12 +365,12 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	function get_log_link_elements(tx_icsawstats_awstats &$awstats_obj, $lfile, $logconfig) {
 		global $LANG;
 		
-		$url = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_txicsawstatsM1', array(
+		$url = BackendUtility::getModuleUrl('tools_txicsawstatsM1', array(
 			't3log' => $lfile,
-			'dbg' => \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('dbg') ? 1 : 0,
+			'dbg' => GeneralUtility::_GP('dbg') ? 1 : 0,
 		));
 		
-		$relPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('ics_awstats');
+		$relPath = ExtensionManagementUtility::siteRelPath('ics_awstats');
 		
 		$content = '<tr>';
 		$content.= '<td width="18"><img src="../'.$relPath.'mod1/logfile.gif" width="18" height="16" title="'.$lfile.'" alt="Logfile: "/></td>';
@@ -373,9 +379,9 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 		if ($awstats_obj->is_set_update_lockfile($lfile)) {
 			$content.= $LANG->getLL('updateInProgress');
 			if ($logconfig['browser_update']) {
-				$rmlockurl = \TYPO3\CMS\Backend\Utility\BackendUtility::getModuleUrl('tools_txicsawstatsM1', array(
+				$rmlockurl = BackendUtility::getModuleUrl('tools_txicsawstatsM1', array(
 					'rmlock' => $lfile,
-					'dbg' => \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('dbg') ? 1 : 0,
+					'dbg' => GeneralUtility::_GP('dbg') ? 1 : 0,
 				));
 				$content.= ' (<a href="'.htmlspecialchars($rmlockurl).'">'.$LANG->getLL('deleteUpdateLockfile').'</a>)';
 			}
@@ -407,7 +413,7 @@ if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/ics_aws
 
 
 // Make instance:
-$SOBE = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('tx_icsawstats_module1');
+$SOBE = GeneralUtility::makeInstance('tx_icsawstats_module1');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
