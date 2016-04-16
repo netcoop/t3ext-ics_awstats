@@ -1,9 +1,4 @@
 #!/usr/bin/perl
-
-if (!$ENV{'TYPO3_MAGIC'}) {
-	exit 1;
-}
-
 #------------------------------------------------------------------------------
 # Free realtime web server logfile analyzer to show advanced web statistics.
 # Works from command line or as a CGI. You must use this script as often as
@@ -41,8 +36,8 @@ use File::Spec;
 # Defines
 #------------------------------------------------------------------------------
 use vars qw/ $REVISION $VERSION /;
-$REVISION = '20140126';
-$VERSION  = "7.3 (build $REVISION)";
+$REVISION = '20150714';
+$VERSION  = "7.4 (build $REVISION)";
 
 # ----- Constants -----
 use vars qw/
@@ -197,7 +192,7 @@ use vars qw/
   $IncludeInternalLinksInOriginSection
   $AuthenticatedUsersNotCaseSensitive
   $Expires $UpdateStats $MigrateStats $URLNotCaseSensitive $URLWithQuery $URLReferrerWithQuery
-  $DecodeUA
+  $DecodeUA $DecodePunycode
   /;
 (
 	$DebugMessages,
@@ -242,11 +237,12 @@ use vars qw/
 	$URLNotCaseSensitive,
 	$URLWithQuery,
 	$URLReferrerWithQuery,
-	$DecodeUA
+	$DecodeUA,
+	$DecodePunycode
   )
   = (
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   );
 use vars qw/
   $DetailedReportsOnNewWindows
@@ -256,7 +252,7 @@ use vars qw/
   $ShowHoursStats $ShowDomainsStats $ShowHostsStats
   $ShowRobotsStats $ShowSessionsStats $ShowPagesStats $ShowFileTypesStats $ShowDownloadsStats
   $ShowOSStats $ShowBrowsersStats $ShowOriginStats
-  $ShowKeyphrasesStats $ShowKeywordsStats $ShowMiscStats $ShowHTTPErrorsStats
+  $ShowKeyphrasesStats $ShowKeywordsStats $ShowMiscStats $ShowHTTPErrorsStats $ShowHTTPErrorsPageDetail
   $AddDataArrayMonthStats $AddDataArrayShowDaysOfMonthStats $AddDataArrayShowDaysOfWeekStats $AddDataArrayShowHoursStats
   /;
 (
@@ -287,6 +283,7 @@ use vars qw/
 	$ShowKeywordsStats,
 	$ShowMiscStats,
 	$ShowHTTPErrorsStats,
+	$ShowHTTPErrorsPageDetail,
 	$AddDataArrayMonthStats,
 	$AddDataArrayShowDaysOfMonthStats,
 	$AddDataArrayShowDaysOfWeekStats,
@@ -514,7 +511,6 @@ use vars qw/
 %MonthNumLib                = ();
 %ValidHTTPCodes             = %ValidSMTPCodes = ();
 %TrapInfosForHTTPErrorCodes = ();
-$TrapInfosForHTTPErrorCodes{404} = 1;    # TODO Add this in config file
 %NotPageList = ();
 %DayBytes    = %DayHits               = %DayPages  = %DayVisits   = ();
 %MaxNbOf     = %MinHit                = ();
@@ -537,7 +533,7 @@ use vars qw/
   %_worm_h %_worm_k %_worm_l %_login_h %_login_p %_login_k %_login_l %_screensize_h
   %_misc_p %_misc_h %_misc_k
   %_cluster_p %_cluster_h %_cluster_k
-  %_se_referrals_p %_se_referrals_h %_sider404_h %_referer404_h %_url_p %_url_k %_url_e %_url_x
+  %_se_referrals_p %_se_referrals_h %_sider_h %_referer_h %_err_host_h %_url_p %_url_k %_url_e %_url_x
   %_downloads
   %_unknownreferer_l %_unknownrefererbrowser_l
   %_emails_h %_emails_k %_emails_l %_emailr_h %_emailr_k %_emailr_l
@@ -1326,7 +1322,7 @@ sub debug {
 	if ( $level <= $DEBUGFORCED ) {
 		my $debugstring = $_[0];
 		if ( !$DebugResetDone ) {
-			open( DEBUGFORCEDFILE, "debug.log" );
+			open( DEBUGFORCEDFILE, "<debug.log" );
 			close DEBUGFORCEDFILE;
 			chmod 0666, "debug.log";
 			$DebugResetDone = 1;
@@ -1576,16 +1572,25 @@ sub DateIsValid {
 # Parameters:	$starttime $endtime
 # Input:        None
 # Output:		None
-# Return:		A string that identify the visit duration range
+# Return:		A string from $SessionsRange[0..6] that identify the visit duration range
 #------------------------------------------------------------------------------
 sub GetSessionRange {
-	my $starttime = my $endtime;
-	if ( shift =~ /$regdate/o ) {
-		$starttime = Time::Local::timelocal( $6, $5, $4, $3, $2 - 1, $1 );
-	}
-	if ( shift =~ /$regdate/o ) {
-		$endtime = Time::Local::timelocal( $6, $5, $4, $3, $2 - 1, $1 );
-	}
+	my $param1=shift;
+	my $param2=shift;
+
+	# skip unneeded calculations if its the same
+	if ($param1 == $param2) { return $SessionsRange[0]; }
+
+	my $starttime;
+	my $endtime;
+
+	eval {
+		#safety to prevent Time::Local causing termination on invalid data
+		#Ex: Second '84' out of range 0..59 at /xxx/awstats.pl
+		if ($param1 =~ /$regdate/o) { $starttime = Time::Local::timelocal($6,$5,$4,$3,$2-1,$1); }
+		if ($param2 =~ /$regdate/o) { $endtime = Time::Local::timelocal($6,$5,$4,$3,$2-1,$1); }
+	};
+	
 	my $delay = $endtime - $starttime;
 	if ($Debug) {
 		debug( "GetSessionRange $endtime - $starttime = $delay", 4 );
@@ -1740,7 +1745,7 @@ sub Read_Config {
 		my $searchdir = $_;
 		if ( $searchdir && $searchdir !~ /[\\\/]$/ ) { $searchdir .= "/"; }
 		
-		if ( -f $searchdir.$PROG.".".$SiteConfig.".conf" &&  open( CONFIG, "$searchdir$PROG.$SiteConfig.conf" ) ) {
+		if ( -f $searchdir.$PROG.".".$SiteConfig.".conf" &&  open( CONFIG, "<$searchdir$PROG.$SiteConfig.conf" ) ) {
 			$FileConfig = "$searchdir$PROG.$SiteConfig.conf";
 			$FileSuffix = ".$SiteConfig";
 			if ($Debug){debug("Opened config: $searchdir$PROG.$SiteConfig.conf", 2);}
@@ -1819,6 +1824,11 @@ sub Read_Config {
 	if ( !scalar keys %ValidSMTPCodes ) {
 		$ValidSMTPCodes{"1"} = $ValidSMTPCodes{"250"} = 1;
 	}
+
+	# If parameter TrapInfosForHTTPErrorCodes empty, init to default
+	if ( !scalar keys %TrapInfosForHTTPErrorCodes ) {
+		$TrapInfosForHTTPErrorCodes{"404"} = 1;
+	}
 }
 
 #------------------------------------------------------------------------------
@@ -1880,7 +1890,7 @@ sub Parse_Config {
 				next;
 			}
             local( *CONFIG_INCLUDE );   # To avoid having parent file closed when include file is closed
-			if ( open( CONFIG_INCLUDE, $includeFile ) ) {
+			if ( open( CONFIG_INCLUDE, "<$includeFile" ) ) {
 				&Parse_Config( *CONFIG_INCLUDE, $level + 1, $includeFile );
 				close(CONFIG_INCLUDE);
 			}
@@ -1940,6 +1950,26 @@ sub Parse_Config {
 
 			# No regex test as SiteDomain is always exact value
 			$SiteDomain = $value;
+
+  			if ($SiteDomain =~ m/xn--/) 
+  			{
+				# TODO Add code to test if IDNA::Punycode module is on
+				#use IDNA::Punycode;
+				$DecodePunycode=0;	# Set to 1 if module is on	
+  				if ($DecodePunycode)
+  				{
+	                idn_prefix(undef);
+	                my @parts = split(/\./, $SiteDomain);
+	                foreach (@parts) {
+	                	if ($_ =~ s/^xn--//) {
+	                    	eval { $_ = decode_punycode($_); };
+	                        if (my $e = $@) { $_ = $e; }
+	                    }
+	                }
+	                $SiteDomain = join('.', @parts);
+  				}
+            }
+                        			
 			next;
 		}
 		if ( $param =~ /^AddLinkToExternalCGIWrapper/ ) {
@@ -2096,6 +2126,11 @@ sub Parse_Config {
 		if ( $param =~ /^ValidSMTPCodes/ ) {
 			%ValidSMTPCodes = ();
 			foreach ( split( /\s+/, $value ) ) { $ValidSMTPCodes{$_} = 1; }
+			next;
+		}
+		if ( $param =~ /^TrapInfosForHTTPErrorCodes/ ) {
+			%TrapInfosForHTTPErrorCodes = ();
+			foreach ( split( /\s+/, $value ) ) { $TrapInfosForHTTPErrorCodes{$_} = 1; }
 			next;
 		}
 		if ( $param =~ /^URLWithQueryWithOnlyFollowingParameters$/ ) {
@@ -2753,6 +2788,7 @@ sub Check_Config {
 	if ( $ShowClusterStats !~ /[01PHB]/ )    { $ShowClusterStats    = 0; }
 	if ( $ShowMiscStats !~ /[01anjdfrqwp]/ ) { $ShowMiscStats       = 'a'; }
 	if ( $ShowHTTPErrorsStats !~ /[01]/ )    { $ShowHTTPErrorsStats = 1; }
+	if ( $ShowHTTPErrorsPageDetail !~ /[RH]/ ) { $ShowHTTPErrorsPageDetail = 'R'; }
 	if ( $ShowSMTPErrorsStats !~ /[01]/ )    { $ShowSMTPErrorsStats = 0; }
 	if ( $AddDataArrayMonthStats !~ /[01]/ ) { $AddDataArrayMonthStats = 1; }
 
@@ -3112,6 +3148,7 @@ sub Read_Plugins {
 					'hashfiles'            => 'u',
 					'geoipfree'            => 'u',
 					'geoip'                => 'ou',
+					'geoip6'               => 'ou',
 					'geoip_region_maxmind' => 'mou',
 					'geoip_city_maxmind'   => 'mou',
 					'geoip_isp_maxmind'    => 'mou',
@@ -3287,6 +3324,7 @@ sub Read_Plugins {
 
 # In output mode, geo ip plugins are not loaded, so message changes are done here (can't be done in plugin init function)
 	if (   $PluginsLoaded{'init'}{'geoip'}
+		|| $PluginsLoaded{'init'}{'geoip6'}
 		|| $PluginsLoaded{'init'}{'geoipfree'} )
 	{
 		$Message[17] = $Message[25] = $Message[148];
@@ -5828,12 +5866,19 @@ sub Read_History_With_TmpUpdate {
 							if ( $SectionsToLoad{"sider_$code"} ) {
 								$countloaded++;
 								if ( $field[1] ) {
-									$_sider404_h{ $field[0] } += $field[1];
+									$_sider_h{$code}{$field[0]} += $field[1];
 								}
 								if ( $withupdate || $HTMLOutput{"errors$code"} )
 								{
-									if ( $field[2] ) {
-										$_referer404_h{ $field[0] } = $field[2];
+									my $fieldidx = 2;
+									foreach (split(//, $ShowHTTPErrorsPageDetail)) {
+										last if (! $field[$fieldidx] );
+										if ( $_ =~ /R/i ) {
+											$_referer_h{$code}{$field[0]} = $field[2];
+										} elsif ( $_ =~ /H/i ) {
+											$_err_host_h{$code}{$field[0]} = $field[$fieldidx];
+										}
+										$fieldidx++;
 									}
 								}
 							}
@@ -5871,8 +5916,9 @@ sub Read_History_With_TmpUpdate {
 						Save_History( "sider_$code", $year, $month, $date );
 						delete $SectionsToSave{"sider_$code"};
 						if ($withpurge) {
-							%_sider404_h   = ();
-							%_referer404_h = ();
+							%_sider_h   = ();
+							%_referer_h = ();
+							%_err_host_h = ();
 						}
 					}
 					if ( !scalar %SectionsToLoad ) {
@@ -6262,7 +6308,7 @@ sub Save_History {
 "# also remove completely the MAP section (AWStats will rewrite it at next\n";
 		print HISTORYTMP "# update).\n";
 		print HISTORYTMP "${xmlbb}BEGIN_MAP${xmlbs}"
-		  . ( 26 + ( scalar keys %TrapInfosForHTTPErrorCodes ) +
+		  . ( 27 + ( scalar keys %TrapInfosForHTTPErrorCodes ) +
 			  ( scalar @ExtraName ? scalar @ExtraName - 1 : 0 ) +
 			  ( scalar keys %{ $PluginsLoaded{'SectionInitHashArray'} } ) )
 		  . "${xmlbe}\n";
@@ -7280,18 +7326,24 @@ sub Save_History {
 				print HISTORYTMP "<section id='$sectiontosave'><comment>\n";
 			}
 			print HISTORYTMP
-			  "# URL with $code errors - Hits - Last URL referer\n";
+			  "# URL with $code errors - Hits"
+			  . ($ShowHTTPErrorsPageDetail =~ /R/i ? " - Last URL referrer" : '')
+			  . ($ShowHTTPErrorsPageDetail =~ /H/i ? " - Host" : '')
+			  . "\n";
+
 			$ValueInFile{$sectiontosave} = tell HISTORYTMP;
 			print HISTORYTMP "${xmlbb}BEGIN_SIDER_$code${xmlbs}"
-			  . ( scalar keys %_sider404_h )
+			  . ( scalar keys %{$_sider_h{$code}} )
 			  . "${xmlbe}\n";
-			foreach ( keys %_sider404_h ) {
+			foreach ( keys %{$_sider_h{$code}} ) {
 				my $newkey = $_;
-				my $newreferer = $_referer404_h{$_} || '';
+				my $newreferer = $_referer_h{$code}{$_} || '';
+				my $newhost = $_err_host_h{$code}{$_} || '';
 				print HISTORYTMP "${xmlrb}"
 				  . XMLEncodeForHisto($newkey)
-				  . "${xmlrs}$_sider404_h{$_}${xmlrs}"
-				  . XMLEncodeForHisto($newreferer)
+				  . "${xmlrs}$_sider_h{ $code }{$_}"
+				  . ($ShowHTTPErrorsPageDetail =~ /R/i ? "${xmlrs}" . XMLEncodeForHisto($newreferer) : '')
+				  . ($ShowHTTPErrorsPageDetail =~ /H/i ? "${xmlrs}" . XMLEncodeForHisto($newhost) : '')
 				  . "${xmlre}\n";
 			}
 			print HISTORYTMP "${xmleb}END_SIDER_$code${xmlee}\n";
@@ -7715,7 +7767,7 @@ sub Init_HashArray {
 	  %_login_l      = %_screensize_h   = ();
 	%_misc_p         = %_misc_h         = %_misc_k = ();
 	%_cluster_p      = %_cluster_h      = %_cluster_k = ();
-	%_se_referrals_p = %_se_referrals_h = %_sider404_h = %_referer404_h =
+	%_se_referrals_p = %_se_referrals_h = %_sider_h = %_referer_h = %_err_host_h =
 	  %_url_p        = %_url_k          = %_url_e = %_url_x = ();
 	%_downloads = ();
 	%_unknownreferer_l = %_unknownrefererbrowser_l = ();
@@ -8489,7 +8541,7 @@ sub PrintCLIHelp{
 		'browsers',       'domains', 'operating_systems', 'robots',
 		'search_engines', 'worms'
 	);
-	print "----- $PROG $VERSION (c) 2000-2013 Laurent Destailleur -----\n";
+	print "----- $PROG $VERSION (c) 2000-2015 Laurent Destailleur -----\n";
 	print
 "AWStats is a free web server logfile analyzer to show you advanced web\n";
 	print "statistics.\n";
@@ -9086,8 +9138,7 @@ sub DefinePerlParsingFormat {
 				$i++;
 				push @fieldlib, 'date';
 				$PerlParsingFormat .=
-"([^$LogSeparatorWithoutStar]+\\s[^$LogSeparatorWithoutStar]+)"
-				  ;                        # Need \s for Exchange log files
+"([^$LogSeparatorWithoutStar]+\\s[^$LogSeparatorWithoutStar]+)";                        # Need \s for Exchange log files
 			}
 			elsif ( $f =~ /%time3$/ )
 			{ # mon d hh:mm:ss  or  mon  d hh:mm:ss  or  mon dd hh:mm:ss yyyy  or  day mon dd hh:mm:ss  or  day mon dd hh:mm:ss yyyy
@@ -9103,7 +9154,7 @@ sub DefinePerlParsingFormat {
 				push @fieldlib, 'date';
 				$PerlParsingFormat .= "(\\d+)";
 			}
-			elsif ( $f =~ /%time5$/ ) {    # yyyy-mm-ddThh:mm:ss+00:00 (iso format)
+			elsif ( $f =~ /%time5$/ ) {    # yyyy-mm-ddThh:mm:ss+00:00 (iso format) or yyyy-mm-ddThh:mm:ss.000000Z
 				$pos_date = $i;
 				$i++;
 				push @fieldlib, 'date';
@@ -9111,7 +9162,7 @@ sub DefinePerlParsingFormat {
 				$i++;
 				push @fieldlib, 'tz';
 				$PerlParsingFormat .=
-"([^$LogSeparatorWithoutStar]+T[^$LogSeparatorWithoutStar]+)([-+]\d\d:\d\d)";
+"([^$LogSeparatorWithoutStar]+T[^$LogSeparatorWithoutStar]+)([-+\.]\\d\\d[:\\.\\dZ]*)";
 			}
 
 			# Special for methodurl and methodurlnoprot
@@ -9879,9 +9930,7 @@ sub HTMLTopBanner{
 			$NewLinkParams =~ s/(&amp;|&)+/&amp;/i;
 			$NewLinkParams =~ s/^&amp;//;
 			$NewLinkParams =~ s/&amp;$//;
-			if ($NewLinkParams) {
-				$NewLinkParams = "${NewLinkParams}&amp;";
-			}
+			if ($NewLinkParams) { $NewLinkParams = "${NewLinkParams}&amp;"; }
 			print "&nbsp; &nbsp; &nbsp; &nbsp;";
 			print "<a href=\""
 			  . XMLEncode("$AWScript${NewLinkParams}update=1")
@@ -10388,10 +10437,12 @@ sub HTMLMenu{
 				  ( $ShowSMTPErrorsStats ? $Message[147] : $Message[32] ),
 				'clusters' => $Message[155]
 			);
-			foreach ( keys %TrapInfosForHTTPErrorCodes ) {
-				$menu{"errors$_"}     = $ShowHTTPErrorsStats ? 4 : 0;
+			my $idx = 0;
+			foreach ( sort keys %TrapInfosForHTTPErrorCodes ) {
+				$menu{"errors$_"}     = $ShowHTTPErrorsStats ? 4+$idx : 0;
 				$menulink{"errors$_"} = 2;
-				$menutext{"errors$_"} = $Message[31];
+				$menutext{"errors$_"} = $Message[49] . ' (' . $_ . ')';
+				$idx++;
 			}
 			HTMLShowMenuCateg(
 				'others',       $Message[2],
@@ -11604,26 +11655,45 @@ sub HTMLShowKeywords{
 #------------------------------------------------------------------------------
 sub HTMLShowErrorCodes{
 	my $code = shift;
+	my $title;
+	my %customtitles = ( "404", "$Message[47]" );
+	$title = $customtitles{$code} ? $customtitles{$code} :
+	           (join(' ', ( ($httpcodelib{$code} ? $httpcodelib{$code} :
+	           'Unknown error'), "urls (HTTP code " . $code . ")" )));
 	print "$Center<a name=\"errors$code\">&nbsp;</a><br />\n";
-	&tab_head( $Message[47], 19, 0, "errors$code" );
+	&tab_head( $title, 19, 0, "errors$code" );
 	print "<tr bgcolor=\"#$color_TableBGRowTitle\"><th>URL ("
-	  . Format_Number(( scalar keys %_sider404_h ))
-	  . ")</th><th bgcolor=\"#$color_h\">$Message[49]</th><th>$Message[23]</th></tr>\n";
+	  . Format_Number(( scalar keys %{$_sider_h{$code}} ))
+	  . ")</th><th bgcolor=\"#$color_h\">$Message[49]</th>";
+	foreach (split(//, $ShowHTTPErrorsPageDetail)) {
+		if ( $_ =~ /R/i ) {
+			print "<th bgcolor=\"#$color_p\" width=\"80\">$Message[23]</th>";
+		} elsif ( $_ =~ /H/i ) {
+			print "<th bgcolor=\"#$color_p\" width=\"80\">$Message[81]</th>";
+		}
+	}
+	print "</tr>\n";
 	my $total_h = 0;
 	my $count = 0;
-	&BuildKeyList( $MaxRowsInHTMLOutput, 1, \%_sider404_h,
-		\%_sider404_h );
+	&BuildKeyList( $MaxRowsInHTMLOutput, 1, \%{$_sider_h{$code}},
+		\%{$_sider_h{$code}} );
 	foreach my $key (@keylist) {
 		my $nompage = XMLEncode( CleanXSS($key) );
 
 		#if (length($nompage)>$MaxLengthOfShownURL) { $nompage=substr($nompage,0,$MaxLengthOfShownURL)."..."; }
-		my $referer = XMLEncode( CleanXSS( $_referer404_h{$key} ) );
+		my $referer = XMLEncode( CleanXSS( $_referer_h{$code}{$key} ) );
+		my $host = XMLEncode( CleanXSS( $_err_host_h{$code}{$key} ) );
 		print "<tr><td class=\"aws\">$nompage</td>";
-		print "<td>".Format_Number($_sider404_h{$key})."</td>";
-		print "<td class=\"aws\">"
-		  . ( $referer ? "$referer" : "&nbsp;" ) . "</td>";
+		print "<td>".Format_Number($_sider_h{$code}{$key})."</td>";
+		foreach (split(//, $ShowHTTPErrorsPageDetail)) {
+			if ( $_ =~ /R/i ) {
+				print "<td class=\"aws\">" . ( $referer ? "$referer" : "&nbsp;" ) . "</td>";
+			} elsif ( $_ =~ /H/i ) {
+				print "<td class=\"aws\">" . ( $host ? "$host" : "&nbsp;" ) . "</td>";
+			}
+		}
 		print "</tr>\n";
-		my $total_s += $_sider404_h{$key};
+		my $total_s += $_sider_h{$code}{$key};
 		$count++;
 	}
 
@@ -12622,7 +12692,7 @@ sub HTMLShowDomains{
 			$_domener_u =
 			  sprintf( "%.0f", ( $_domener_u * $TotalUnique ) / 2 );
 			print "<td>".Format_Number($_domener_u)." ("
-			  . sprintf( "%.1f%", 100 * $_domener_u / $TotalUnique )
+			  . sprintf( "%.1f%", $TotalUnique ? 100 * $_domener_u / $TotalUnique : 0 )
 			  . ")</td>";
 		}
 		if ( $ShowDomainsStats =~ /V/i ) {
@@ -12635,7 +12705,7 @@ sub HTMLShowDomains{
 			$_domener_v =
 			  sprintf( "%.0f", ( $_domener_v * $TotalVisits ) / 2 );
 			print "<td>".Format_Number($_domener_v)." ("
-			  . sprintf( "%.1f%", 100 * $_domener_v / $TotalVisits )
+			  . sprintf( "%.1f%", $TotalVisits ? 100 * $_domener_v / $TotalVisits : 0 )
 			  . ")</td>";
 		}
 		if ( $ShowDomainsStats =~ /P/i ) {
@@ -14638,7 +14708,7 @@ sub HTMLMainCountries{
 			$_domener_u =
 			  sprintf( "%.0f", ( $_domener_u * $TotalUnique ) / 2 );
 			print "<td>".Format_Number($_domener_u)." ("
-			  . sprintf( "%.1f%", 100 * $_domener_u / $TotalUnique )
+			  . sprintf( "%.1f%", $TotalUnique ? 100 * $_domener_u / $TotalUnique : 0 )
 			  . ")</td>";
 		}
 		if ( $ShowDomainsStats =~ /V/i ) {
@@ -14651,7 +14721,7 @@ sub HTMLMainCountries{
 			$_domener_v =
 			  sprintf( "%.0f", ( $_domener_v * $TotalVisits ) / 2 );
 			print "<td>".Format_Number($_domener_v)." ("
-			  . sprintf( "%.1f%", 100 * $_domener_v / $TotalVisits )
+			  . sprintf( "%.1f%", $TotalVisits ? 100 * $_domener_v / $TotalVisits : 0 )
 			  . ")</td>";
 		}
 
@@ -16934,6 +17004,7 @@ my @AllowedCLIArgs = (
 	'showsteps',          'showdropped',
 	'showcorrupted',      'showunknownorigin',
 	'showdirectorigin',   'limitflush',
+    'nboflastupdatelookuptosave',
 	'confdir',            'updatefor',
 	'hostfilter',         'hostfilterex',
 	'urlfilter',          'urlfilterex',
@@ -17149,6 +17220,7 @@ if ( $QueryString =~ /(^|&|&amp;)noloadplugin=([^&]+)/i ) {
 	foreach ( split( /,/, $2 ) ) { $NoLoadPlugin{ &Sanitize( "$_", 1 ) } = 1; }
 }
 if ( $QueryString =~ /(^|&|&amp;)limitflush=(\d+)/i ) { $LIMITFLUSH = $2; }
+if ( $QueryString =~ /(^|&|&amp;)nboflastupdatelookuptosave=(\d+)/i ) { $NBOFLASTUPDATELOOKUPTOSAVE = $2; }
 
 # Get/Define output
 if ( $QueryString =~
@@ -17883,7 +17955,8 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 	my $regipv4l          = qr/^::ffff:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 	my $regipv6           = qr/^[0-9A-F]*:/i;
 	my $regvermsie        = qr/msie([+_ ]|)([\d\.]*)/i;
-	my $regvermsie11      = qr/trident\/7\.\d*\;([+_ ]|)rv:([\d\.]*)/i;
+	#my $regvermsie11      = qr/trident\/7\.\d*\;([+_ ]|)rv:([\d\.]*)/i;
+	my $regvermsie11      = qr/trident\/7\.\d*\;([a-zA-Z;+_ ]+|)rv:([\d\.]*)/i;
 	my $regvernetscape    = qr/netscape.?\/([\d\.]*)/i;
 	my $regverfirefox     = qr/firefox\/([\d\.]*)/i;
 	# For Opera:
@@ -18794,18 +18867,25 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 					foreach my $code ( keys %TrapInfosForHTTPErrorCodes ) {
 						if ( $field[$pos_code] == $code ) {
 
-					   # This is an error code which referrer need to be tracked
+							# This is an error code which referrer need to be tracked
 							my $newurl =
 							  substr( $field[$pos_url], 0,
 								$MaxLengthOfStoredURL );
 							$newurl =~ s/[$URLQuerySeparators].*$//;
-							$_sider404_h{$newurl}++;
-							if ( $pos_referer >= 0 ) {
+							$_sider_h{$code}{$newurl}++;
+							if ( $pos_referer >= 0 && $ShowHTTPErrorsPageDetail =~ /R/i  ) {
 								my $newreferer = $field[$pos_referer];
 								if ( !$URLReferrerWithQuery ) {
 									$newreferer =~ s/[$URLQuerySeparators].*$//;
 								}
-								$_referer404_h{$newurl} = $newreferer;
+								$_referer_h{$code}{$newurl} = $newreferer;
+							}
+							if ( $pos_host >= 0 && $ShowHTTPErrorsPageDetail =~ /H/i ) {
+								my $newhost = $field[$pos_host];
+								if ( !$URLReferrerWithQuery ) {
+									$newhost =~ s/[$URLQuerySeparators].*$//;
+								}
+								$_err_host_h{$code}{$newurl} = $newhost;
 								last;
 							}
 						}
@@ -19198,7 +19278,10 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 				$HostResolved = $Host;
 
 				# Resolve Domain
-				if ( $PluginsLoaded{'GetCountryCodeByAddr'}{'geoip'} ) {
+				if ( $PluginsLoaded{'GetCountryCodeByAddr'}{'geoip6'} ) {
+					$Domain = GetCountryCodeByAddr_geoip6($HostResolved);
+				}
+				elsif ( $PluginsLoaded{'GetCountryCodeByAddr'}{'geoip'} ) {
 					$Domain = GetCountryCodeByAddr_geoip($HostResolved);
 				}
 
@@ -19227,7 +19310,10 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 				# Resolve Domain
 				if ($ip)
 				{    # If we have ip, we use it in priority instead of hostname
-					if ( $PluginsLoaded{'GetCountryCodeByAddr'}{'geoip'} ) {
+					if ( $PluginsLoaded{'GetCountryCodeByAddr'}{'geoip6'} ) {
+						$Domain = GetCountryCodeByAddr_geoip6($Host);
+					}
+					elsif ( $PluginsLoaded{'GetCountryCodeByAddr'}{'geoip'} ) {
 						$Domain = GetCountryCodeByAddr_geoip($Host);
 					}
 
@@ -19253,7 +19339,10 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 					}
 				}
 				else {
-					if ( $PluginsLoaded{'GetCountryCodeByName'}{'geoip'} ) {
+					if ( $PluginsLoaded{'GetCountryCodeByName'}{'geoip6'} ) {
+						$Domain = GetCountryCodeByName_geoip6($HostResolved);
+					}
+					elsif ( $PluginsLoaded{'GetCountryCodeByName'}{'geoip'} ) {
 						$Domain = GetCountryCodeByName_geoip($HostResolved);
 					}
 

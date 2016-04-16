@@ -12,9 +12,9 @@
 
 $EM_CONF[$_EXTKEY] = array (
 	'title' => 'ICS AWStats',
-	'description' => 'Includes the AWStats logfile analyzer as a backend module. This is a modified version of cc_awstats to support cron, reverse DNS lookups, ics_web_awstats and ics_beuser_awstats.',
+	'description' => 'Includes the AWStats logfile analyzer as a backend module. Requires ext retrostats. Supports cron, reverse DNS lookups and ics_web_awstats.',
 	'category' => 'module',
-	'version' => '0.7.1',
+	'version' => '0.7.2',
 	'state' => 'stable',
 	'uploadfolder' => 0,
 	'createDirs' => '',

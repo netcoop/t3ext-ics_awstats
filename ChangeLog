@@ -1,5 +1,9 @@
 2016-04-15 Loek Hilgersom <typo3extensions@netcoop.nl>
-	* Released v0.7.1
+	* Released v0.7.2
+	* Updated Awstats to v7.4
+
+2016-04-15 Loek Hilgersom <typo3extensions@netcoop.nl>
+	* Released v0.7.1 bugfix and maintenance release for TYPO3 7.6 LTS
 	* Fix wrong/unused variables
 	* Reformatting and applying 'use' statements
 	* Fix #75490 Replace last remaining reference to t3lib_extMgm
