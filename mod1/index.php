@@ -113,16 +113,16 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 				// otherwise the script will die in call_awstats
 				switch ($result)	{
 					case tx_icsawstats_awstats::$ERR_LOGFILE_NOT_CONFIGURED:
-						$content .= $this->getErrorString($LANG->getLL('errNoLogfileConfig'));
+						$content = $this->getErrorString($LANG->getLL('errNoLogfileConfig'));
 						break;
 					case tx_icsawstats_awstats::$ERR_AWSTATS_CALL_FAILED:
-						$content .= $this->getErrorString($LANG->getLL('errAwsCallFailed'));
+						$content = $this->getErrorString($LANG->getLL('errAwsCallFailed'));
 						break;
 					case tx_icsawstats_awstats::$ERR_UPDATE_IS_LOCKED:
-						$content .= $this->getErrorString($LANG->getLL('errUpdateLocked'));
+						$content = $this->getErrorString($LANG->getLL('errUpdateLocked'));
 						break;
 					default:
-						$content .= $this->getWarningString($LANG->getLL('errUnknown'));
+						$content = $this->getWarningString($LANG->getLL('errUnknown'));
 				}
 			}
 		} else {
@@ -237,7 +237,7 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 				if (!\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('logf_edit_conf')) {
 					$theCode.= '<br /><input type="submit" name="logf_edit_conf" value="'.$LANG->getLL('btnEditConf').'" /><br />';
 				}
-				$content.= $this->doc->section($LANG->getLL('hdrSelectLogfile'),'<br />'.$theCode.'<br />',0,1);
+				$content = $this->doc->section($LANG->getLL('hdrSelectLogfile'),'<br />'.$theCode.'<br />',0,1);
 			}
 
 
@@ -284,8 +284,15 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 
 		// Help text:
 		if (!\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('t3log') && $GLOBALS['BE_USER']->uc['helpText']) {
+			if (version_compare(TYPO3_branch, '7.5', '<')) {
+				$icon = '<img src="'.$GLOBALS['BACK_PATH'].'gfx/helpbubble.gif" width="14" height="14" hspace="2" align="top" alt="" />';
+			} else {
+				$iconFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconFactory::class);
+				$icon = $iconFactory->getIcon('overlay-info', \TYPO3\CMS\Core\Imaging\Icon::SIZE_SMALL)->render();
+			}
+
 			$content.= $this->doc->divider(10);
-			$content.= $this->doc->section('','<img src="'.$GLOBALS['BACK_PATH'].'gfx/helpbubble.gif" width="14" height="14" hspace="2" align="top" alt="" />'.$LANG->getLL('helpText'));
+			$content.= $this->doc->section('', $icon . $LANG->getLL('helpText'));
 		}
 
 		$this->content.= $content;
@@ -380,8 +387,13 @@ class tx_icsawstats_module1 extends \TYPO3\CMS\Backend\Module\BaseScriptClass {
 	}
 
 	function getErrorString($msg) {
-		global $BACK_PATH;
-		return '<img src="'.$BACK_PATH.'gfx/icon_fatalerror.gif" width="18" height="16" border="0" align="top" alt="" /><strong>'.$msg.'</strong>';
+		if (version_compare(TYPO3_branch, '7.5', '<')) {
+			$icon = '<img src="' . $GLOBALS['BACK_PATH'] . 'gfx/icon_fatalerror.gif" width="18" height="16" border="0" align="top" alt="" />';
+		} else {
+			$iconFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconFactory::class);
+			$icon = $iconFactory->getIcon('overlay-warning', \TYPO3\CMS\Core\Imaging\Icon::SIZE_SMALL)->render();
+		}
+		return $icon . '<strong>'.$msg.'</strong>';
 	}
 
 }
