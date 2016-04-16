@@ -36,8 +36,8 @@ use File::Spec;
 # Defines
 #------------------------------------------------------------------------------
 use vars qw/ $REVISION $VERSION /;
-$REVISION = '20150714';
-$VERSION  = "7.4 (build $REVISION)";
+$REVISION = '20160127';
+$VERSION  = "7.5 (build $REVISION)";
 
 # ----- Constants -----
 use vars qw/
@@ -358,7 +358,7 @@ use vars qw/
 use vars qw/
   @RobotsSearchIDOrder_list1 @RobotsSearchIDOrder_list2 @RobotsSearchIDOrder_listgen
   @SearchEnginesSearchIDOrder_list1 @SearchEnginesSearchIDOrder_list2 @SearchEnginesSearchIDOrder_listgen
-  @BrowsersSearchIDOrder @OSSearchIDOrder @WordsToExtractSearchUrl @WordsToCleanSearchUrl
+  @BrowsersSearchIDOrder @OSSearchIDOrder @WordsToCleanSearchUrl
   @WormsSearchIDOrder
   @RobotsSearchIDOrder @SearchEnginesSearchIDOrder
   @_from_p @_from_h
@@ -2306,7 +2306,7 @@ sub Read_Ref_Data {
 		);
 	}
 	if ( ( scalar keys %BrowsersHashIDLib )
-		&& @BrowsersSearchIDOrder != ( scalar keys %BrowsersHashIDLib ) - 8 )
+		&& @BrowsersSearchIDOrder != ( scalar keys %BrowsersHashIDLib ) - 9 )
 	{
 		#foreach (sort keys %BrowsersHashIDLib)
 		#{
@@ -2319,8 +2319,8 @@ sub Read_Ref_Data {
 		error(  "Not same number of records of BrowsersSearchIDOrder ("
 			  . (@BrowsersSearchIDOrder)
 			  . " entries) and BrowsersHashIDLib ("
-			  . ( ( scalar keys %BrowsersHashIDLib ) - 8 )
-			  . " entries without firefox,opera,chrome,safari,konqueror,svn,msie,netscape) in Browsers database. May be you updated AWStats without updating browsers.pm file or you made changed into browsers.pm not correctly. Check your file "
+			  . ( ( scalar keys %BrowsersHashIDLib ) - 9 )
+			  . " entries without firefox,opera,chrome,safari,konqueror,svn,msie,netscape,edge) in Browsers database. May be you updated AWStats without updating browsers.pm file or you made changed into browsers.pm not correctly. Check your file "
 			  . $FilePath{"browsers.pm"}
 			  . " is up to date." );
 	}
@@ -9040,12 +9040,12 @@ sub DefinePerlParsingFormat {
 		$LogFormatString =~ s/%>s/%code/g;
 		$LogFormatString =~ s/%b(\s)/%bytesd$1/g;
 		$LogFormatString =~ s/%b$/%bytesd/g;
-		$LogFormatString =~ s/\"%{Referer}i\"/%refererquot/g;
-		$LogFormatString =~ s/\"%{User-Agent}i\"/%uaquot/g;
-		$LogFormatString =~ s/%{mod_gzip_input_size}n/%gzipin/g;
-		$LogFormatString =~ s/%{mod_gzip_output_size}n/%gzipout/g;
-		$LogFormatString =~ s/%{mod_gzip_compression_ratio}n/%gzipratio/g;
-		$LogFormatString =~ s/\(%{ratio}n\)/%deflateratio/g;
+		$LogFormatString =~ s/\"%\{Referer}i\"/%refererquot/g;
+		$LogFormatString =~ s/\"%\{User-Agent}i\"/%uaquot/g;
+		$LogFormatString =~ s/%\{mod_gzip_input_size}n/%gzipin/g;
+		$LogFormatString =~ s/%\{mod_gzip_output_size}n/%gzipout/g;
+		$LogFormatString =~ s/%\{mod_gzip_compression_ratio}n/%gzipratio/g;
+		$LogFormatString =~ s/\(%\{ratio}n\)/%deflateratio/g;
 
 		# Replacement for a IIS and ISA format string
 		$LogFormatString =~ s/cs-uri-query/%query/g;    # Must be before cs-uri
@@ -9103,6 +9103,11 @@ sub DefinePerlParsingFormat {
 			# Add separator for next field
 			if ($PerlParsingFormat) { $PerlParsingFormat .= "$LogSeparator"; }
 
+			# If field is prefixed with custom string, just push it to regex literally
+			if ( $f =~ /^([^%]+)%/ ) {
+				$PerlParsingFormat .= "$1"
+                        }
+
 			# Special for logname
 			if ( $f =~ /%lognamequot$/ ) {
 				$pos_logname = $i;
@@ -9154,7 +9159,13 @@ sub DefinePerlParsingFormat {
 				push @fieldlib, 'date';
 				$PerlParsingFormat .= "(\\d+)";
 			}
-			elsif ( $f =~ /%time5$/ ) {    # yyyy-mm-ddThh:mm:ss+00:00 (iso format) or yyyy-mm-ddThh:mm:ss.000000Z
+			elsif ( $f =~ /%time5$/ ) {
+				# Supports the following formats:
+				# - yyyy-mm-ddThh:mm:ss           (Incomplete ISO 8601)
+				# - yyyy-mm-ddThh:mm:ssZ          (ISO 8601, zero meridian)
+				# - yyyy-mm-ddThh:mm:ss+00:00     (ISO 8601)
+				# - yyyy-mm-ddThh:mm:ss+0000      (Apache's best approximation to ISO 8601 using "%{%Y-%m-%dT%H:%M:%S%z}t" in LogFormat)
+				# - yyyy-mm-ddThh:mm:ss.000000Z   (Amazon AWS log files)
 				$pos_date = $i;
 				$i++;
 				push @fieldlib, 'date';
@@ -9162,7 +9173,7 @@ sub DefinePerlParsingFormat {
 				$i++;
 				push @fieldlib, 'tz';
 				$PerlParsingFormat .=
-"([^$LogSeparatorWithoutStar]+T[^$LogSeparatorWithoutStar]+)([-+\.]\\d\\d[:\\.\\dZ]*)";
+"([^$LogSeparatorWithoutStar]+T[^$LogSeparatorWithoutStar]+)(Z|[-+\.]\\d\\d[:\\.\\dZ]*)?";
 			}
 
 			# Special for methodurl and methodurlnoprot
@@ -12477,7 +12488,7 @@ sub HTMLShowHosts{
 		}
 		if ( $FilterIn{'host'} && $FilterEx{'host'} ) { print " - "; }
 		if ( $FilterEx{'host'} ) {
-			print " Exlude $Message[79] '<b>$FilterEx{'host'}</b>'";
+			print " Exclude $Message[79] '<b>$FilterEx{'host'}</b>'";
 		}
 		if ( $FilterIn{'host'} || $FilterEx{'host'} ) { print ": "; }
 		print "$cpt $Message[81]";
@@ -12692,7 +12703,7 @@ sub HTMLShowDomains{
 			$_domener_u =
 			  sprintf( "%.0f", ( $_domener_u * $TotalUnique ) / 2 );
 			print "<td>".Format_Number($_domener_u)." ("
-			  . sprintf( "%.1f%", $TotalUnique ? 100 * $_domener_u / $TotalUnique : 0 )
+			  . sprintf( "%.1f%", 100 * $_domener_u / $TotalUnique )
 			  . ")</td>";
 		}
 		if ( $ShowDomainsStats =~ /V/i ) {
@@ -12705,7 +12716,7 @@ sub HTMLShowDomains{
 			$_domener_v =
 			  sprintf( "%.0f", ( $_domener_v * $TotalVisits ) / 2 );
 			print "<td>".Format_Number($_domener_v)." ("
-			  . sprintf( "%.1f%", $TotalVisits ? 100 * $_domener_v / $TotalVisits : 0 )
+			  . sprintf( "%.1f%", 100 * $_domener_v / $TotalVisits )
 			  . ")</td>";
 		}
 		if ( $ShowDomainsStats =~ /P/i ) {
@@ -14708,7 +14719,7 @@ sub HTMLMainCountries{
 			$_domener_u =
 			  sprintf( "%.0f", ( $_domener_u * $TotalUnique ) / 2 );
 			print "<td>".Format_Number($_domener_u)." ("
-			  . sprintf( "%.1f%", $TotalUnique ? 100 * $_domener_u / $TotalUnique : 0 )
+			  . sprintf( "%.1f%", 100 * $_domener_u / $TotalUnique )
 			  . ")</td>";
 		}
 		if ( $ShowDomainsStats =~ /V/i ) {
@@ -14721,7 +14732,7 @@ sub HTMLMainCountries{
 			$_domener_v =
 			  sprintf( "%.0f", ( $_domener_v * $TotalVisits ) / 2 );
 			print "<td>".Format_Number($_domener_v)." ("
-			  . sprintf( "%.1f%", $TotalVisits ? 100 * $_domener_v / $TotalVisits : 0 )
+			  . sprintf( "%.1f%", 100 * $_domener_v / $TotalVisits )
 			  . ")</td>";
 		}
 
@@ -17954,6 +17965,7 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 	my $regipv4           = qr/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 	my $regipv4l          = qr/^::ffff:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 	my $regipv6           = qr/^[0-9A-F]*:/i;
+	my $regveredge        = qr/edge\/([\d]*)/i;
 	my $regvermsie        = qr/msie([+_ ]|)([\d\.]*)/i;
 	#my $regvermsie11      = qr/trident\/7\.\d*\;([+_ ]|)rv:([\d\.]*)/i;
 	my $regvermsie11      = qr/trident\/7\.\d*\;([a-zA-Z;+_ ]+|)rv:([\d\.]*)/i;
@@ -19524,8 +19536,16 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 					if ( !$uabrowser ) {
 						my $found = 1;
 
+						# Edge (must be at beginning)
+						if ($UserAgent =~ /$regveredge/o)
+						{
+							$_browser_h{"edge$1"}++;
+							if ($PageBool) { $_browser_p{"edge$1"}++; }
+							$TmpBrowser{$UserAgent} = "edge$1";
+						}
+						
 						# Opera ?
-						if ( $UserAgent =~ /$regveropera/o ) {	# !!!! version number in in regex $1 or $2 !!!
+						elsif ( $UserAgent =~ /$regveropera/o ) {	# !!!! version number in in regex $1 or $2 !!!
 						    $_browser_h{"opera".($1||$2)}++;
 						    if ($PageBool) { $_browser_p{"opera".($1||$2)}++; }
 						    $TmpBrowser{$UserAgent} = "opera".($1||$2);

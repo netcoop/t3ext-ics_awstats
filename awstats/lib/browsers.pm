@@ -32,7 +32,8 @@
 	'opera'     => 5,
 	'safari'    => 6,
 	'chrome'    => 7,
-	'konqueror' => 8
+	'konqueror' => 8,
+	'edge'      => 9
 );
 
 # BrowsersSearchIDOrder
@@ -271,6 +272,7 @@
 'svn', 'Subversion client', 
 'msie','MS Internet Explorer',
 'netscape','Netscape',
+'edge','Edge',
 
 'elinks','ELinks',
 'firebird','Firebird (Old Firefox)',
@@ -523,6 +525,7 @@
 'svn','subversion',
 'msie','msie',
 'netscape','netscape',
+'edge','edge',
 
 'firebird','phoenix',
 'go!zilla','gozilla',
@@ -747,6 +750,9 @@
 
 
 # Browsers examples by engines
+#
+# -- Edge --
+# Mozilla/5.0 (Windows NT 10.0; <64-bit tags>) AppleWebKit/<WebKit Rev> (KHTML, like Gecko) Chrome/<Chrome Rev> Safari/<WebKit Rev> Edge/<EdgeHTML Rev>.<Windows Build>
 #
 # -- Mosaic --
 # MSIE		4.0  	Mozilla/4.0 (compatible; MSIE 5.0; Windows 98; DigExt; KITV4 Wanadoo; KITV5 Wanadoo)

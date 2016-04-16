@@ -111,6 +111,7 @@
 'cdr',['image','d'],
 'ico',['image','i'],
 'svg',['image','i'],
+'svgz',['image','i'],
 # Document
 'ai',['document','d'],
 'doc',['document','d'],
@@ -198,6 +199,9 @@
 # Font
 'ttf',['ttf',''],
 'fon',['fon',''],
+'eot',['fon',''],
+'woff',['fon',''],
+'woff2',['fon',''],
 # Encrypted files
 'pgp',['encrypt',''],
 'gpg',['encrypt',''],
