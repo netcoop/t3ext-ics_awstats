@@ -36,7 +36,7 @@ use File::Spec;
 # Defines
 #------------------------------------------------------------------------------
 use vars qw/ $REVISION $VERSION /;
-$REVISION = '20160127';
+$REVISION = '20160301';
 $VERSION  = "7.5 (build $REVISION)";
 
 # ----- Constants -----
@@ -182,7 +182,7 @@ $BuildHistoryFormat    = 'text';
 $ExtraTrackedRowsLimit = 500;
 $DatabaseBreak         = 'month';
 use vars qw/
-  $DebugMessages $AllowToUpdateStatsFromBrowser $EnableLockForUpdate $DNSLookup $AllowAccessFromWebToAuthenticatedUsersOnly
+  $DebugMessages $AllowToUpdateStatsFromBrowser $EnableLockForUpdate $DNSLookup $DynamicDNSLookup $AllowAccessFromWebToAuthenticatedUsersOnly
   $BarHeight $BarWidth $CreateDirDataIfNotExists $KeepBackupOfHistoricFiles
   $NbOfLinesParsed $NbOfLinesDropped $NbOfLinesCorrupted $NbOfLinesComment $NbOfLinesBlank $NbOfOldLines $NbOfNewLines
   $NbOfLinesShowsteps $NewLinePhase $NbOfLinesForCorruptedLog $PurgeLogFile $ArchiveLogRecords
@@ -199,6 +199,7 @@ use vars qw/
 	$AllowToUpdateStatsFromBrowser,
 	$EnableLockForUpdate,
 	$DNSLookup,
+	$DynamicDNSLookup,
 	$AllowAccessFromWebToAuthenticatedUsersOnly,
 	$BarHeight,
 	$BarWidth,
@@ -241,7 +242,7 @@ use vars qw/
 	$DecodePunycode
   )
   = (
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   );
 use vars qw/
@@ -912,7 +913,7 @@ sub html_head {
 				print
 ".aws_title  { font: 13px verdana, arial, helvetica, sans-serif; font-weight: bold; background-color: #$color_TableBGTitle; text-align: center; margin-top: 0; margin-bottom: 0; padding: 1px 1px 1px 1px; color: #$color_TableTitle; }\n";
 				print
-".aws_blank  { font: 13px verdana, arial, helvetica, sans-serif; background-color: #$color_Background; text-align: center; margin-bottom: 0; padding: 1px 1px 1px 1px; display: none; }\n";
+".aws_blank  { font: 13px verdana, arial, helvetica, sans-serif; background-color: #$color_Background; text-align: center; margin-bottom: 0; padding: 1px 1px 1px 1px; }\n";
 				print <<EOF;
 .aws_data {
 	background-color: #$color_Background;
@@ -2306,7 +2307,7 @@ sub Read_Ref_Data {
 		);
 	}
 	if ( ( scalar keys %BrowsersHashIDLib )
-		&& @BrowsersSearchIDOrder != ( scalar keys %BrowsersHashIDLib ) - 9 )
+		&& @BrowsersSearchIDOrder != ( scalar keys %BrowsersHashIDLib ) - ( scalar keys %BrowsersFamily ) )
 	{
 		#foreach (sort keys %BrowsersHashIDLib)
 		#{
@@ -2319,7 +2320,7 @@ sub Read_Ref_Data {
 		error(  "Not same number of records of BrowsersSearchIDOrder ("
 			  . (@BrowsersSearchIDOrder)
 			  . " entries) and BrowsersHashIDLib ("
-			  . ( ( scalar keys %BrowsersHashIDLib ) - 9 )
+			  . ( ( scalar keys %BrowsersHashIDLib ) - ( scalar keys %BrowsersFamily ) )
 			  . " entries without firefox,opera,chrome,safari,konqueror,svn,msie,netscape,edge) in Browsers database. May be you updated AWStats without updating browsers.pm file or you made changed into browsers.pm not correctly. Check your file "
 			  . $FilePath{"browsers.pm"}
 			  . " is up to date." );
@@ -12534,11 +12535,37 @@ sub HTMLShowHosts{
 		&BuildKeyList( $MaxRowsInHTMLOutput, $MinHit{'Host'}, \%_host_h,
 			\%_host_l );
 	}
+	my $regipv4=qr/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+
+	if ( $DynamicDNSLookup == 2 ) {
+		# Use static DNS file
+		&Read_DNS_Cache( \%MyDNSTable, "$DNSStaticCacheFile", "", 1 );
+	}
+
 	foreach my $key (@keylist) {
 		my $host = CleanXSS($key);
 		print "<tr><td class=\"aws\">"
 		  . ( $_robot_l{$key} ? '<b>'  : '' ) . "$host"
-		  . ( $_robot_l{$key} ? '</b>' : '' ) . "</td>";
+		  . ( $_robot_l{$key} ? '</b>' : '' );
+
+		if ($DynamicDNSLookup) {
+			# Dynamic reverse DNS lookup
+        	        if ($host =~ /$regipv4/o) {
+                	        my $lookupresult=lc(gethostbyaddr(pack("C4",split(/\./,$host)),AF_INET));       # This may be slow
+                        	if (! $lookupresult || $lookupresult =~ /$regipv4/o || ! IsAscii($lookupresult)) {
+					if ( $DynamicDNSLookup == 2 ) {
+						# Check static DNS file
+						$lookupresult = $MyDNSTable{$host};
+						if ($lookupresult) { print " ($lookupresult)"; }
+						else { print ""; }
+					}
+					else { print ""; }
+	                        }
+        	                else { print " ($lookupresult)"; }
+	                }
+		}
+
+		print "</td>";
 		&HTMLShowHostInfo($key);
 		if ( $ShowHostsStats =~ /P/i ) {
 			print "<td>"
@@ -14912,9 +14939,35 @@ sub HTMLMainHosts{
 	my $total_p = my $total_h = my $total_k = 0;
 	my $count = 0;
 	
+	my $regipv4 = qr/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;	
+
+        if ( $DynamicDNSLookup == 2 ) {
+	        # Use static DNS file
+                &Read_DNS_Cache( \%MyDNSTable, "$DNSStaticCacheFile", "", 1 );
+        }
+
 	foreach my $key (@keylist) {
 		print "<tr>";
-		print "<td class=\"aws\">$key</td>";
+		print "<td class=\"aws\">$key";
+
+		if ($DynamicDNSLookup) {
+	                # Dynamic reverse DNS lookup
+	                if ($key =~ /$regipv4/o) {
+		                my $lookupresult=lc(gethostbyaddr(pack("C4",split(/\./,$key)),AF_INET));	# This may be slow
+                	        if (! $lookupresult || $lookupresult =~ /$regipv4/o || ! IsAscii($lookupresult)) {
+                                        if ( $DynamicDNSLookup == 2 ) {
+                                                # Check static DNS file
+                                                $lookupresult = $MyDNSTable{$key};
+                                                if ($lookupresult) { print " ($lookupresult)"; }
+                                                else { print ""; }
+                                        }
+                                        else { print ""; }
+                                }
+                                else { print " ($lookupresult)"; }
+                        }
+                }
+
+		print "</td>";
 		&HTMLShowHostInfo($key);
 		if ( $ShowHostsStats =~ /P/i ) {
 			print '<td>' . ( Format_Number($_host_p{$key}) || "&nbsp;" ) . '</td>';
@@ -17965,7 +18018,7 @@ if ( $UpdateStats && $FrameName ne 'index' && $FrameName ne 'mainleft' )
 	my $regipv4           = qr/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 	my $regipv4l          = qr/^::ffff:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 	my $regipv6           = qr/^[0-9A-F]*:/i;
-	my $regveredge        = qr/edge\/([\d]*)/i;
+	my $regveredge        = qr/edge\/([\d]+)/i;
 	my $regvermsie        = qr/msie([+_ ]|)([\d\.]*)/i;
 	#my $regvermsie11      = qr/trident\/7\.\d*\;([+_ ]|)rv:([\d\.]*)/i;
 	my $regvermsie11      = qr/trident\/7\.\d*\;([a-zA-Z;+_ ]+|)rv:([\d\.]*)/i;
