@@ -51,7 +51,7 @@ class tx_icsawstats_awstats {
 	public static $LOGF_CHECKED = 4;
 
 	// constructor
-	function tx_icsawstats_awstats() {
+	public function __construct() {
 		global $TYPO3_CONF_VARS;
 
 		$this->ext_conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['ics_awstats']);
@@ -72,6 +72,10 @@ class tx_icsawstats_awstats {
 		}
 		$this->conf['awstats_data_dir'] = $this->conf['logfile_dir'] .'.awstats-data/';
 		$this->conf['awstats_conf'] = $this->conf['awstats_data_dir'].'awstats-module.conf';
+	}
+	
+	public function tx_icsawstats_awstats() {
+		self::__construct();
 	}
 
 	function get_perlbin() {
